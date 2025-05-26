@@ -38,11 +38,11 @@ RUN apt-get update \
     && echo 'if [[ $arch == *"x86_64"* ]]; then' >> /root/tmp/tmp.sh \
     && echo '    wget -O /root/tmp/7zz.tar.xz "$latest_7z_x64_url"' >> /root/tmp/tmp.sh \
     && echo '    wget -O /root/tmp/BililiveRecorder-CLI.zip https://github.com/BililiveRecorder/BililiveRecorder/releases/latest/download/BililiveRecorder-CLI-linux-x64.zip' >> /root/tmp/tmp.sh \
-    && echo '    wget -O /rec/DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/DanmakuFactory/DanmakuFactory-amd64' >> /root/tmp/tmp.sh \
+    && echo '    wget -O /DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/DanmakuFactory/DanmakuFactory-amd64' >> /root/tmp/tmp.sh \
     && echo 'elif [[ $arch == *"aarch64"* ]]; then' >> /root/tmp/tmp.sh \
     && echo '    wget -O /root/tmp/7zz.tar.xz "$latest_7z_arm64_url"' >> /root/tmp/tmp.sh \
     && echo '    wget -O /root/tmp/BililiveRecorder-CLI.zip https://github.com/BililiveRecorder/BililiveRecorder/releases/latest/download/BililiveRecorder-CLI-linux-arm64.zip' >> /root/tmp/tmp.sh \
-    && echo '    wget -O /rec/DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/DanmakuFactory/DanmakuFactory-arm64' >> /root/tmp/tmp.sh \
+    && echo '    wget -O /DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/DanmakuFactory/DanmakuFactory-arm64' >> /root/tmp/tmp.sh \
     && echo 'fi' >> /root/tmp/tmp.sh \
     # 赋予脚本执行权限
     && chmod +x /root/tmp/tmp.sh \
@@ -65,6 +65,9 @@ RUN apt-get update \
     
     # 创建启动脚本
     && echo '#!/bin/bash' >> /usr/local/bin/start.sh \
+    # 创建工作目录
+    && echo 'mkdir -p /rec/biliup' >> /usr/local/bin/start.sh \
+    && echo 'mkdir -p /rec/录播姬' >> /usr/local/bin/start.sh \
     && echo 'if [ -n "$XCT258_GITHUB_TOKEN" ]; then' >> /usr/local/bin/start.sh \
     && echo '  echo "检测到 XCT258_GITHUB_TOKEN，准备检查并下载私有配置文件..."' >> /usr/local/bin/start.sh \
     && echo '  mkdir -p /root/.config/rclone' >> /usr/local/bin/start.sh \
@@ -195,8 +198,8 @@ RUN apt-get update \
     && echo 'echo "$Biliup_PASS"' >> /usr/local/bin/start.sh \
     && echo 'echo "------------------------------------"' >> /usr/local/bin/start.sh \
     # 保持容器运行
-    && echo 'tail -f /dev/null' >> /usr/local/bin/start.sh \
-    # 赋予可执行权限
-    && chmod +x /usr/local/bin/start.sh \
+    && echo 'tail -f /dev/null' >> /usr/local/bin/start.sh
+    # 赋予启动脚本执行权限
+    && chmod +x /usr/local/bin/start.sh
 # 设置容器启动时执行的命令
 ENTRYPOINT ["/usr/local/bin/start.sh"]
