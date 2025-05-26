@@ -29,7 +29,7 @@ RUN apt-get update \
     && mkdir -p /rec/录播姬 \
     # 创建临时目录
     && mkdir -p /root/tmp \
-    # 创建临时启动脚本
+    # 创建临时脚本
     && echo '#!/bin/bash' > /root/tmp/tmp.sh \
     && echo 'latest_release_7z=$(curl -s https://api.github.com/repos/ip7z/7zip/releases/latest)' >> /root/tmp/tmp.sh \
     && echo 'latest_7z_x64_url=$(echo "$latest_release_7z" | jq -r ".assets[] | select(.name | test(\"linux-x64.tar.xz\")) | .browser_download_url")' >> /root/tmp/tmp.sh \
