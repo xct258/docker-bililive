@@ -198,7 +198,7 @@ RUN apt-get update \
     && echo 'echo "$Biliup_PASS"' >> /usr/local/bin/start.sh \
     && echo 'echo "------------------------------------"' >> /usr/local/bin/start.sh \
     # 保持容器运行
-    && echo 'tail -f /dev/null' >> /usr/local/bin/start.sh
+    && echo 'tail -f /dev/null' >> /usr/local/bin/start.sh \
     # 赋予启动脚本执行权限
     && chmod +x /usr/local/bin/start.sh
 # 设置容器启动时执行的命令
