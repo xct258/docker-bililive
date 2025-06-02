@@ -114,7 +114,7 @@ def overlay_videos(original_video, overlay_video, output_file, ass_file):
         '-y', output_file
     ]
 
-    result = subprocess.run(qsv_command)
+    result = subprocess.run(qsv_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # 如果 QSV 压制失败，则使用 CPU 压制
     if result.returncode != 0:
@@ -134,7 +134,7 @@ def overlay_videos(original_video, overlay_video, output_file, ass_file):
             '-c:a', 'copy',
             '-y', output_file
         ]
-        subprocess.run(cpu_command)
+        subprocess.run(cpu_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 # 主函数
 def main(xml_file):
