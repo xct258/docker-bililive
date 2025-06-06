@@ -56,7 +56,6 @@ def main():
             base_name = os.path.splitext(xml_path)[0]
             mp4_path = base_name + ".mp4"
             if not os.path.isfile(mp4_path):
-                print("跳过，无对应视频:", file)
                 continue
 
             times = parse_danmaku(xml_path)
@@ -77,8 +76,6 @@ def main():
         output_img = os.path.join(folder, f"{os.path.basename(base_name)}.jpg")
         extract_frame_ffmpeg(mp4_path, peak_time, output_img)
         print(output_img)
-    else:
-        print("没有找到有效的弹幕和视频文件对")
 
 if __name__ == '__main__':
     main()
