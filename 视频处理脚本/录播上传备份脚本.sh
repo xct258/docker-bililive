@@ -32,6 +32,12 @@ generate_upload_desc() {
 开播时间：$formatted_start_time_2
 录制平台：$recording_platform
 
+不带弹幕画质更好的视频文件和往期视频文件：
+https://yourls.xct258.top/zbhf-khx
+或者
+https://alist-cf.p1.xct258.top
+ps：这两是一样的，第二个链接可能会失效，第一个链接会一直使用
+
 括弧笑频道主页：
 bilibili
 顶级尼鸡塔结晶
@@ -53,6 +59,9 @@ https://live.bilibili.com/1962720
 
 使用录播姬和biliup录制上传，有问题请站内私信联系xct258
 https://space.bilibili.com/33235987
+
+项目地址:
+https://github.com/xct258/docker-bililive
 
 非常感谢录播姬和biliup项目
 录播姬
