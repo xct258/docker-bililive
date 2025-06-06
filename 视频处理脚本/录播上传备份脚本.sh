@@ -167,9 +167,18 @@ for dir in "${directories[@]}"; do
   backup_dirs+=("$backup_dir")
   # 将文件移动到临时目录
   for file in "${input_files[@]}"; do
-    # 检查文件扩展名
-    if [[ "$file" == *.mp4 || "$file" == *.flv || "$file" == *.ts || "$file" == *.xml ]]; then
-      # 移动文件到临时目录
+    ext="${file##*.}"  # 获取扩展名（不带点）
+    filename="$(basename "$file" ."$ext")"
+
+    if [[ "$ext" == "mp4" ]]; then
+      # 是mp4文件，直接移动
+      mv "$file" "$backup_dir" || upload_success=false
+    elif [[ "$ext" == "flv" || "$ext" == "ts" ]]; then
+      # 非mp4视频文件，转换为mp4
+      output_file="$backup_dir/${filename}.mp4"
+      ffmpeg -i "$file" -c:v copy -c:a copy -v quiet -y "$output_file" && rm "$file" || upload_success=false
+    elif [[ "$ext" == "xml" ]]; then
+      # XML 文件，直接移动
       mv "$file" "$backup_dir" || upload_success=false
     fi
   done
@@ -267,14 +276,14 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     chmod +x $source_backup/biliup-rs
 
 
-    biliup_upload_output_2=$($source_backup/biliup-rs -u "$source_backup"/cookies-烦心事远离.json upload --copyright 2 --cover "$biliup_cover_image" --source https://live.bilibili.com/1962720 --tid 17 --title "$upload_title_2" --desc "$upload_desc_2" --tag "搞笑,直播回放,奶茶猪,高机动持盾军官,括弧笑,娱乐主播,切片" "${biliup_high_energy_clip}")
+    #biliup_upload_output_2=$($source_backup/biliup-rs -u "$source_backup"/cookies-烦心事远离.json upload --copyright 2 --cover "$biliup_cover_image" --source https://live.bilibili.com/1962720 --tid 17 --title "$upload_title_2" --desc "$upload_desc_2" --tag "搞笑,直播回放,奶茶猪,高机动持盾军官,括弧笑,娱乐主播,切片" "${biliup_high_energy_clip}")
 
-    if echo "$biliup_upload_output_2" | grep -q "成功"; then
-      echo "上传成功，删除高能切片文件: $biliup_high_energy_clip"
-      rm -f "$biliup_high_energy_clip"
-    else
-      echo "上传失败，保留高能切片文件"
-    fi
+    #if echo "$biliup_upload_output_2" | grep -q "成功"; then
+    #  echo "上传成功，删除高能切片文件: $biliup_high_energy_clip"
+    #  rm -f "$biliup_high_energy_clip"
+    #else
+    #  echo "上传失败，保留高能切片文件"
+    #fi
   fi
 
   for video_file in "${input_files[@]}"; do
@@ -286,25 +295,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
       # 获取文件名（不带扩展名）
       filename_no_ext="${filename%.*}"
       # 示例：录播姬_2024年12月01日22点13分_暗区最穷_高机动持盾军官
-      # 如果文件是 ts 或 flv 格式，则转换为 mp4
-      if [[ "$filename" == *.ts || "$filename" == *.flv ]]; then
-      # 定义转换后的 mp4 文件名
-      mp4_file="${filename_no_ext}.mp4"
 
-      # 使用 ffmpeg 转换为 mp4
-      if ffmpeg -i "$video_file" -c:v copy -c:a copy -v quiet -y "${backup_dir}/${mp4_file}"; then
-        # 转换成功，删除原文件
-        rm "$video_file"
-      else
-        # 转换失败，退出脚本
-        exit 1
-      fi
-      # 使用转换后的文件
-      video_file="${backup_dir}/${mp4_file}"
-      # 更新 filename 变量为转换后的文件名
-      filename="$mp4_file"
-      filename_no_ext="${mp4_file%.*}"
-      fi
       if [[ "$streamer_name" == "括弧笑bilibili" && "$recording_platform" == "$update_sever" ]]; then
         if [[ "$filename" == *.mp4 ]]; then
           xml_file="${filename_no_ext}.xml"
