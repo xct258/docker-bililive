@@ -32,12 +32,6 @@ generate_upload_desc() {
 开播时间：$formatted_start_time_2
 录制平台：$recording_platform
 
-不带弹幕画质更好的视频文件和往期视频文件：
-https://yourls.xct258.top/zbhf-khx
-或者
-https://alist-cf.p1.xct258.top
-ps：这两是一样的，第二个链接可能会失效，第一个链接会一直使用
-
 括弧笑频道主页：
 bilibili
 顶级尼鸡塔结晶
