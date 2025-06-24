@@ -9,7 +9,7 @@ source_folders=(
   # 可以继续添加其它目录
 )
 # 设置onedrive网盘
-rclone_onedrive_config="onedrivevideo2"
+rclone_onedrive_config="onedrivevideo5"
 # 需要上传视频文件的录制平台。录播姬或者biliup
 update_sever="录播姬"
 # 服务器名称
@@ -31,6 +31,12 @@ generate_upload_desc() {
   echo "直播间标题：$stream_title
 开播时间：$formatted_start_time_2
 录制平台：$recording_platform
+
+原视频文件和往期视频文件：
+https://yourls.xct258.top/zbhf-khx
+或者
+https://openlist.xct258.top
+ps：这两是一样的，第二个链接可能会失效，第一个链接会一直使用
 
 括弧笑频道主页：
 bilibili
@@ -54,7 +60,7 @@ https://live.bilibili.com/1962720
 使用录播姬和biliup录制上传，有问题请站内私信联系xct258
 https://space.bilibili.com/33235987
 
-项目地址:
+项目地址：
 https://github.com/xct258/docker-bililive
 
 非常感谢录播姬和biliup项目
@@ -243,10 +249,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     
     # 获取封面
     biliup_cover_image=$(python3 /rec/封面获取.py "$backup_dir")
-    # 构建视频标题
-    upload_title_2="括弧笑${formatted_start_time_4}直播回放抢先版"
-    # 构建视频简介
-    upload_desc_2=$(generate_upload_desc_2 "$formatted_start_time_4")
+
 
     # 安装xz工具
     if ! command -v xz-utils &> /dev/null; then
@@ -279,8 +282,11 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     chmod +x $source_backup/biliup-rs
 
 
+    # 构建视频标题
+    #upload_title_2="括弧笑${formatted_start_time_4}直播回放抢先版"
+    # 构建视频简介
+    #upload_desc_2=$(generate_upload_desc_2 "$formatted_start_time_4")
     #biliup_upload_output_2=$($source_backup/biliup-rs -u "$source_backup"/cookies-烦心事远离.json upload --copyright 2 --cover "$biliup_cover_image" --source https://live.bilibili.com/1962720 --tid 17 --title "$upload_title_2" --desc "$upload_desc_2" --tag "搞笑,直播回放,奶茶猪,高机动持盾军官,括弧笑,娱乐主播,切片" "${biliup_high_energy_clip}")
-
     #if echo "$biliup_upload_output_2" | grep -q "成功"; then
     #  echo "上传成功，删除高能切片文件: $biliup_high_energy_clip"
     #  rm -f "$biliup_high_energy_clip"
