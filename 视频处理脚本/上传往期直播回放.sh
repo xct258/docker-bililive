@@ -63,7 +63,7 @@ for dirname in "${subdirs[@]}"; do
             --title "$dirname" \
             --desc "硬盘空间回收，不定期投稿没有上传过的直播回放" \
             --tag "搞笑,直播回放,奶茶猪,高机动持盾军官,括弧笑,娱乐主播" \
-            "${video_files[@]}" 2>&1
+            "${video_files[@]}" 2>&1 | tee /dev/stderr
         )
         echo "$upload_output"
         if echo "$upload_output" | grep -q "投稿成功"; then
