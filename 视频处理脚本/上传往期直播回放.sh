@@ -8,7 +8,7 @@ RCLONE_REMOTE="onedrive-video-7:直播录制/括弧笑/2022/12"  # rclone 中的
 DST_DIR="$WORK_DIR/video"
 CACHE_DIR="$WORK_DIR/cache"
 COVER_DIR="$WORK_DIR/covers"
-USED_COVER_FILE="$COVER_DIR/used_biliup_covers.txt"
+USED_COVER_FILE="$CACHE_DIR/used_biliup_covers.txt"
 
 # 创建本地缓存目录
 mkdir -p "$DST_DIR"
