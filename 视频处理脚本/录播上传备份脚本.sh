@@ -9,7 +9,7 @@ source_folders=(
   # 可以继续添加其它目录
 )
 # 设置onedrive网盘
-rclone_onedrive_config="onedrivevideo5"
+rclone_onedrive_config="onedrive-video-5"
 # 需要上传视频文件的录制平台。录播姬或者biliup
 update_sever="录播姬"
 # 服务器名称
@@ -68,16 +68,6 @@ https://github.com/xct258/docker-bililive
 https://github.com/BililiveRecorder/BililiveRecorder
 biliup
 https://github.com/biliup/biliup"
-}
-
-# 生成高能切片版上传描述的函数
-generate_upload_desc_2() {
-  local formatted_start_time_3="$1"
-
-  echo "来源于${formatted_start_time_3}的直播回放
-根据弹幕密集自动切片，完整版会在稍后放出
-
-测试中，有任何问题或者建议欢迎留言"
 }
 
 # 处理上传成功的状态的函数
@@ -244,12 +234,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     streamer_name="括弧笑bilibili"
   fi
   # 投稿高能切片
-  if [[ "$streamer_name" == "括弧笑bilibili" && "$recording_platform" == "$update_sever" ]]; then
-    biliup_high_energy_clip=$(python3 /rec/获取高能片段.py "$backup_dir")
-    
-    # 获取封面
-    biliup_cover_image=$(python3 /rec/封面获取.py "$backup_dir")
-
+  if [[ "$streamer_name" == "括弧笑bilibili" && "$recording_platform" == "$update_sever" ]]; then    
 
     # 安装xz工具
     if ! command -v xz-utils &> /dev/null; then
@@ -280,19 +265,6 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
       rm -rf $source_backup/biliup-rs-tmp
     fi
     chmod +x $source_backup/biliup-rs
-
-
-    # 构建视频标题
-    #upload_title_2="括弧笑${formatted_start_time_4}直播回放抢先版"
-    # 构建视频简介
-    #upload_desc_2=$(generate_upload_desc_2 "$formatted_start_time_4")
-    #biliup_upload_output_2=$($source_backup/biliup-rs -u "$source_backup"/cookies-烦心事远离.json upload --copyright 2 --cover "$biliup_cover_image" --source https://live.bilibili.com/1962720 --tid 17 --title "$upload_title_2" --desc "$upload_desc_2" --tag "搞笑,直播回放,奶茶猪,高机动持盾军官,括弧笑,娱乐主播,切片" "${biliup_high_energy_clip}")
-    #if echo "$biliup_upload_output_2" | grep -q "成功"; then
-    #  echo "上传成功，删除高能切片文件: $biliup_high_energy_clip"
-    #  rm -f "$biliup_high_energy_clip"
-    #else
-    #  echo "上传失败，保留高能切片文件"
-    #fi
   fi
 
   for video_file in "${input_files[@]}"; do
@@ -311,47 +283,54 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
           ass_file="${filename_no_ext}.ass"
           output_file="压制版-${filename_no_ext}.mp4"
           if [[ -f "${backup_dir}/${xml_file}" ]]; then
-            # 使用 DanmakuFactory 生成 ASS 弹幕文件
-            chmod +x /DanmakuFactory
-            /DanmakuFactory -i "${backup_dir}/${xml_file}" -o "${backup_dir}/${ass_file}" -S 50 -O 230 --ignore-warnings > /dev/null || upload_success=false
+            # 检查 XML 是否包含有效弹幕（通过匹配<d，<sc，<gift，<guard开头的行）
+            if grep -aEq '^\s*<(d|sc|gift|guard)' "${backup_dir}/${xml_file}"; then
 
-            # 压制弹幕
-            if lspci | grep -i "VGA\|Display" | grep -i "Intel Corporation" > /dev/null; then
-              # 检查是否已安装 Intel 显卡驱动
-              if ! vainfo > /dev/null 2>&1; then
-                echo "未安装 Intel 显卡驱动。正在安装驱动..."
-                # 安装所需的软件包
-                apt update
-                apt install -y gpg wget
-                # 下载并添加 Intel 显卡软件仓库的 GPG 密钥
-                wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | \
-                gpg --dearmor --output /usr/share/keyrings/intel-graphics.gpg
-                echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy client" | \
-                tee /etc/apt/sources.list.d/intel-gpu-jammy.list
-                # 更新软件包列表
-                apt update
-                # 安装 Intel 显卡驱动相关的软件包
-                apt install -y intel-media-va-driver-non-free libmfx1 libmfxgen1 libvpl2 va-driver-all vainfo
+              # 获取封面
+              biliup_cover_image=$(python3 /rec/封面获取.py "$backup_dir")
+
+              # 使用 DanmakuFactory 生成 ASS 弹幕文件
+              chmod +x /DanmakuFactory
+              /DanmakuFactory -i "${backup_dir}/${xml_file}" -o "${backup_dir}/${ass_file}" -S 50 -O 230 --ignore-warnings > /dev/null || upload_success=false
+
+              # 压制弹幕
+              if lspci | grep -i "VGA\|Display" | grep -i "Intel Corporation" > /dev/null; then
+                # 检查是否已安装 Intel 显卡驱动
+                if ! vainfo > /dev/null 2>&1; then
+                  echo "未安装 Intel 显卡驱动。正在安装驱动..."
+                  # 安装所需的软件包
+                  apt update
+                  apt install -y gpg wget
+                  # 下载并添加 Intel 显卡软件仓库的 GPG 密钥
+                  wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | \
+                  gpg --dearmor --output /usr/share/keyrings/intel-graphics.gpg
+                  echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy client" | \
+                  tee /etc/apt/sources.list.d/intel-gpu-jammy.list
+                  # 更新软件包列表
+                  apt update
+                  # 安装 Intel 显卡驱动相关的软件包
+                  apt install -y intel-media-va-driver-non-free libmfx1 libmfxgen1 libvpl2 va-driver-all vainfo
+                fi
               fi
+
+              # 检查并安装缺失的库
+              for lib in "${!libraries[@]}"; do
+                if ! python3 -c "import $lib" &> /dev/null; then
+                  echo "$lib 未安装，正在通过 apt 安装 ${libraries[$lib]} ..."
+                  apt install -y "${libraries[$lib]}"
+                else
+                  echo "$lib 已安装"
+                fi
+              done
+
+              # 使用py脚本压制视频
+              python3 /rec/压制视频.py "${backup_dir}/${xml_file}"
+
+              # 添加压制弹幕版到数组
+              compressed_files+=("${backup_dir}/${output_file}")
+              # 删除生成的 ASS 弹幕文件
+              rm -f "${backup_dir}/${ass_file}" || upload_success=false
             fi
-
-            # 检查并安装缺失的库
-            for lib in "${!libraries[@]}"; do
-              if ! python3 -c "import $lib" &> /dev/null; then
-                echo "$lib 未安装，正在通过 apt 安装 ${libraries[$lib]} ..."
-                apt install -y "${libraries[$lib]}"
-              else
-                echo "$lib 已安装"
-              fi
-            done
-
-            # 使用py脚本压制视频
-            python3 /rec/压制视频.py "${backup_dir}/${xml_file}"
-
-            # 添加压制弹幕版到数组
-            compressed_files+=("${backup_dir}/${output_file}")
-            # 删除生成的 ASS 弹幕文件
-            rm -f "${backup_dir}/${ass_file}" || upload_success=false
           else
             # 添加视频到数组
             compressed_files+=("${backup_dir}/${filename}")
@@ -401,12 +380,14 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     # rclone 网盘路径
     rclone_backup_path="$rclone_onedrive_config:/直播录制/${streamer_name}/"
   fi
-  # 上传rclone命令
-  rclone move "$backup_dir" "${rclone_backup_path}${formatted_start_time_3}/bilibili/$recording_platform/"  || upload_success=false
 
-  # 检查备份目录是否为空
-  if [ -z "$(ls -A "$backup_dir")" ]; then
-    rmdir "$backup_dir"
+  if rclone move "$backup_dir" "${rclone_backup_path}${formatted_start_time_3}/bilibili/$recording_platform/"; then
+    # rclone 成功执行
+    if [ -z "$(ls -A "$backup_dir")" ]; then
+      rmdir "$backup_dir"
+    fi
+  else
+    upload_success=false
   fi
 
   # 推送消息
