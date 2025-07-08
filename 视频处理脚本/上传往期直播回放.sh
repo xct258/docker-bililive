@@ -9,6 +9,7 @@ DST_DIR="$WORK_DIR/video"
 CACHE_DIR="$WORK_DIR/cache"
 COVER_DIR="$WORK_DIR/covers"
 USED_COVER_FILE="$CACHE_DIR/used_biliup_covers.txt"
+PROCESSED_DIRS_FILE="$CACHE_DIR/processed_dirs.txt"
 
 # 创建本地缓存目录
 mkdir -p "$DST_DIR"
@@ -17,21 +18,29 @@ mkdir -p "$CACHE_DIR"
 
 # 封面选择函数：选择未使用过的封面
 select_unused_cover() {
-    mapfile -t unused_covers < <(comm -23 <(find "$COVER_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) | sort) <(sort "$USED_COVER_FILE"))
+    mapfile -t unused_covers < <(comm -23 <(find "$COVER_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) | sort) <(sort "$USED_COVER_FILE"))
     
     if [[ ${#unused_covers[@]} -eq 0 ]]; then
         echo "❌ 封面图片已全部使用，停止脚本。" >&2
         return 1
     fi
 
-    local cover="${unused_covers[0]}"
-    echo "$cover" >> "$USED_COVER_FILE"
-    echo "$cover"
+    local rand_index=$(od -An -N2 -i /dev/urandom | tr -d ' ' | awk -v max="${#unused_covers[@]}" '{print $1 % max}')
+    local cover="${unused_covers[$rand_index]}"
+
+
+    echo "$cover"  # 不记录，延迟到投稿成功后写入
     return 0
 }
 
-# 遍历远程目录下的一级子目录
-mapfile -t subdirs < <(rclone lsd "$RCLONE_REMOTE" --max-depth 1 | awk '{print $NF}'  | sort  | tail -n +5)
+# 读取已处理的目录列表
+[[ -f "$PROCESSED_DIRS_FILE" ]] || touch "$PROCESSED_DIRS_FILE"
+
+# 获取所有子目录，并过滤掉已处理过的
+mapfile -t subdirs < <(
+  rclone lsd "$RCLONE_REMOTE" --max-depth 1 | awk '{print $NF}' |
+  sort | grep -vFf "$PROCESSED_DIRS_FILE"
+)
 
 for dirname in "${subdirs[@]}"; do
     echo "▶️ 处理远程子目录：$dirname"
@@ -69,6 +78,16 @@ for dirname in "${subdirs[@]}"; do
         if echo "$upload_output" | grep -q "投稿成功"; then
             echo "✅ 投稿成功，删除本地缓存：$local_dst_dir"
             rm -rf "$local_dst_dir"
+
+            if ! grep -Fxq "$biliup_cover_image" "$USED_COVER_FILE"; then
+                echo "$biliup_cover_image" >> "$USED_COVER_FILE"
+            fi
+
+            # 仅当未记录过时再写入
+            if ! grep -Fxq "$dirname" "$PROCESSED_DIRS_FILE"; then
+                echo "$dirname" >> "$PROCESSED_DIRS_FILE"
+            fi
+
         else
             echo "⚠️ 未检测到投稿成功，保留本地文件以便排查"
         fi
