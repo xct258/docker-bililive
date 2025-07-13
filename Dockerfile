@@ -1,4 +1,4 @@
-# 使用 Debian 作为基础镜像
+v# 使用 Debian 作为基础镜像
 FROM debian
 
 # 设置中文环境
@@ -160,7 +160,8 @@ RUN apt-get update \
     && echo 'while true; do' >> /usr/local/bin/start.sh \
     && echo '  echo "\$(date)" > /rec/backup.log 2>&1' >> /usr/local/bin/start.sh \
     && echo '  echo "----------------------------" >> /rec/backup.log 2>&1' >> /usr/local/bin/start.sh \
-    && echo '  /rec/\$FILE_BACKUP_SH >> /rec/backup.log 2>&1' >> /usr/local/bin/start.sh \
+    && echo '  echo "\$FILE_BACKUP_SH脚本开始执行" >> /rec/backup.log 2>&1' >> /usr/local/bin/start.sh \
+    && echo '  /rec/\$FILE_BACKUP_SH' >> /usr/local/bin/start.sh \
     && echo '  echo "----------------------------" >> /rec/backup.log 2>&1' >> /usr/local/bin/start.sh \
     && echo '  echo "\$(date)" >> /rec/backup.log 2>&1' >> /usr/local/bin/start.sh \
     && echo '  current_date=\$(date +%Y-%m-%d)' >> /usr/local/bin/start.sh \
