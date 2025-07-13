@@ -1,4 +1,4 @@
-v# 使用 Debian 作为基础镜像
+# 使用 Debian 作为基础镜像
 FROM debian
 
 # 设置中文环境
