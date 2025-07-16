@@ -62,7 +62,6 @@ RUN apt-get update \
     && pip3 install biliup --break-system-packages \
     # 清理临时文件
     && rm -rf /root/tmp \
-    
     # 创建启动脚本
     && echo '#!/bin/bash' >> /usr/local/bin/start.sh \
     # 创建工作目录
