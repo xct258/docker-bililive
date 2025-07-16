@@ -61,6 +61,7 @@ jobs:
         with:
           context: .                                # 当前目录作为构建上下文
           push: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
-          platforms: linux/amd64,linux/arm64        # 同时构建 x86 和 ARM 版本
+          #platforms: linux/amd64,linux/arm64        # 同时构建 x86 和 ARM 版本
+          #platforms: linux/amd64        # 构建 x86 版本
           labels: ${{ steps.meta.outputs.labels }}  # 镜像标签信息（metadata-action 生成）
           tags: ${{ steps.meta.outputs.tags }}      # 镜像 tag（包括 latest 和日期 tag）
