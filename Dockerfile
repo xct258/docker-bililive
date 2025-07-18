@@ -72,7 +72,7 @@ RUN apt-get update \
     && echo '  mkdir -p /root/.config/rclone' >> /usr/local/bin/start.sh \
     && echo '  if [ ! -f "/root/.config/rclone/rclone.conf" ]; then' >> /usr/local/bin/start.sh \
     && echo '    echo "未检测到 rclone.conf，开始下载..."' >> /usr/local/bin/start.sh \
-    && echo '    wget --header="Authorization: token $XCT258_GITHUB_TOKEN" -O "/root/.config/rclone/rclone.conf" "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/服务器相关/other/rclone配置文件有效期25-11"' >> /usr/local/bin/start.sh \
+    && echo '    wget --header="Authorization: token $XCT258_GITHUB_TOKEN" -O "/root/.config/rclone/rclone.conf" "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/rclone/rclone.conf"' >> /usr/local/bin/start.sh \
     && echo '  else' >> /usr/local/bin/start.sh \
     && echo '    echo "已存在 rclone.conf，跳过下载"' >> /usr/local/bin/start.sh \
     && echo '  fi' >> /usr/local/bin/start.sh \
