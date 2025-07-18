@@ -5,12 +5,13 @@ FROM debian
 RUN apt-get update && apt-get install -y locales tzdata && rm -rf /var/lib/apt/lists/* \
     # 生成中文 locale
     && localedef -i zh_CN -c -f UTF-8 -A /usr/share/locale/locale.alias zh_CN.UTF-8
+
 # 设置环境变量为中文
 ENV LANG=zh_CN.UTF-8
 # 设置时区为上海
 ENV TZ=Asia/Shanghai
 
-# 安装构建所需的相关依赖
+# 安装构建所需的相关依赖，下载文件并写入脚本，配置启动脚本
 RUN apt-get update \
     && apt-get install -y wget git curl nano jq bc tar xz-utils ffmpeg pciutils fontconfig procps python3-pip rclone \
     && mkdir -p /root/.fonts/ /rec/biliup /rec/录播姬 /root/tmp \
@@ -35,7 +36,7 @@ elif [[ "$arch" == "aarch64" ]]; then
 else
     echo "未知架构: $arch"
 fi
-EOF \
+EOF
     && chmod +x /root/tmp/tmp.sh \
     && /root/tmp/tmp.sh \
     && tar -xf /root/tmp/7zz.tar.xz -C /root/tmp \
@@ -161,7 +162,8 @@ echo "当前biliup密码:"
 echo "$Biliup_PASS"
 echo "------------------------------------"
 tail -f /dev/null
-EOF \
+EOF
     && chmod +x /usr/local/bin/start.sh
+
 # 设置容器启动时执行的命令
 ENTRYPOINT ["/usr/local/bin/start.sh"]
