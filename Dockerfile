@@ -31,6 +31,7 @@ RUN apt-get update \
     && mkdir -p /root/tmp \
     # 创建临时脚本
     && echo '#!/bin/bash' > /root/tmp/tmp.sh \
+    && echo 'set -x' > /root/tmp/tmp.sh \
     && echo 'latest_release_7z=$(curl -s https://api.github.com/repos/ip7z/7zip/releases/latest)' >> /root/tmp/tmp.sh \
     && echo 'latest_7z_x64_url=$(echo "$latest_release_7z" | jq -r ".assets[] | select(.name | test(\"linux-x64.tar.xz\")) | .browser_download_url")' >> /root/tmp/tmp.sh \
     && echo 'latest_7z_arm64_url=$(echo "$latest_release_7z" | jq -r ".assets[] | select(.name | test(\"linux-arm64.tar.xz\")) | .browser_download_url")' >> /root/tmp/tmp.sh \
