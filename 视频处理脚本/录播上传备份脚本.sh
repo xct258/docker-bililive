@@ -1,19 +1,19 @@
 #!/bin/bash
-set -x
+
 # 设置工作目录和备份文件件路径
 source_backup="/rec"
 # 设置视频源文件夹路径，会处理设置目录中的的文件夹里的视频，不会处理设置目录中的视频
 source_folders=(
-  "/rec/录播姬/video"
-  "/rec/biliup/video"
+  "${source_backup}/biliup/video"
+  "${source_backup}/录播姬/video"
   # 可以继续添加其它目录
 )
 # 设置onedrive网盘
 rclone_onedrive_config="onedrive-video-5"
 # 需要上传视频文件的录制平台。录播姬或者biliup
-update_sever="录播姬"
+update_sever="biliup"
 # 服务器名称
-sever_name="甲骨文云-1-debian12-1"
+sever_name="pve-1-nas-1"
 
 # 定义需要检查的库及其apt包名
 declare -A libraries
@@ -31,6 +31,7 @@ generate_upload_desc() {
   echo "直播间标题：$stream_title
 开播时间：$formatted_start_time_2
 录制平台：$recording_platform
+偶尔通知的直播通知Q群：971923797
 
 原视频文件和往期视频文件：
 https://yourls.xct258.top/zbhf-khx
@@ -93,21 +94,31 @@ ${start_time}场
   fi
 }
 
+# 引入日志函数库
+# 假设日志函数脚本名为log.sh，且放在同目录，加载它
+source "$(dirname "${BASH_SOURCE[0]}")/log.sh"
+
+log info "脚本开始执行"
+
 # 安装ffmpeg
 if ! command -v ffmpeg &> /dev/null; then
-  echo "未检测到 ffmpeg，先安装 ffmpeg"
+  log info "检测到系统未安装 ffmpeg，开始安装..."
   if ! apt install -y ffmpeg; then
-    echo "ffmpeg 安装失败，退出脚本"
+    log error "安装 ffmpeg 失败，脚本退出"
     exit 1
+  else
+    log success "ffmpeg 安装成功"
   fi
 fi
 
 # 安装wget
 if ! command -v wget &> /dev/null; then
-  echo "未检测到 wget，先安装 wget"
+  log info "检测到系统未安装 wget，开始安装..."
   if ! apt install -y wget; then
-    echo "wget 安装失败，退出脚本"
+    log error "安装 wget 失败，脚本退出"
     exit 1
+  else
+    log success "wget 安装成功"
   fi
 fi
 
@@ -117,17 +128,17 @@ for source_folder in "${source_folders[@]}"; do
     mkdir -p "$source_folder"
   fi
 done
+
 # 创建一个空数组来保存非空目录
 directories=()
 # 创建一个空数组来保存所有的备份目录
 backup_dirs=()
 
-# 查找非空目录
 for source_folder in "${source_folders[@]}"; do
   # 找到所有非空的目录
   while IFS= read -r dir; do
+    # 判断此目录是否不含有子目录（-mindepth 1 -type d 查找子目录）
     if [ -z "$(find "$dir" -mindepth 1 -type d)" ]; then
-      # 将符合条件的目录添加到数组中
       directories+=("$dir")
     fi
   done < <(find "$source_folder" -type d -not -empty | sort)
@@ -136,6 +147,7 @@ done
 # 遍历每个非空目录
 for dir in "${directories[@]}"; do
   upload_success=true
+
   # 读取所有文件路径
   IFS=$'\n' read -d '' -r -a input_files < <(find "$dir" -type f \( -name "*.ts" -o -name "*.flv" -o -name "*.mp4" -o -name "*.xml" \) | sort)
 
@@ -160,11 +172,11 @@ for dir in "${directories[@]}"; do
   recording_platform=$(echo "$base_filename" | cut -d'_' -f 1)
   # 示例：录播姬
 
-  backup_dir="${source_backup}/backup_${recording_platform}_${streamer_name}_${start_time}"
+  backup_dir="${source_backup}/backup/${recording_platform}_${streamer_name}_${start_time}"
   mkdir -p $backup_dir
   # 将备份目录添加到数组
   backup_dirs+=("$backup_dir")
-  # 将文件移动到临时目录
+  # 处理文件移动或转换
   for file in "${input_files[@]}"; do
     ext="${file##*.}"  # 获取扩展名（不带点）
     filename="$(basename "$file" ."$ext")"
@@ -175,30 +187,36 @@ for dir in "${directories[@]}"; do
     elif [[ "$ext" == "flv" || "$ext" == "ts" ]]; then
       # 非mp4视频文件，转换为mp4
       output_file="$backup_dir/${filename}.mp4"
-      ffmpeg -i "$file" -c:v copy -c:a copy -v quiet -y "$output_file" && rm "$file" || upload_success=false
+      log info 转换视频文件为mp4格式
+      if ffmpeg -i "$file" -c:v copy -c:a copy -v quiet -y "$output_file"; then
+        rm "$file"
+        log success "转换 $file 到 $output_file 并删除源文件成功"
+      else
+        log error "转换失败：$file"
+        upload_success=false
+      fi
     elif [[ "$ext" == "xml" ]]; then
       # XML 文件，直接移动
       mv "$file" "$backup_dir" || upload_success=false
     fi
   done
-
-  # 移动成功后删除目录
-  if $upload_success; then
-    rm -rf "$dir"
-  fi
+  rm -rf "$dir"
+  log success "处理完毕，删除原目录成功：$dir"
 done
 
 # 按时间排序备份目录
 sorted_backup_dirs=($(printf '%s\n' "${backup_dirs[@]}" | sort))
 
 for backup_dir in "${sorted_backup_dirs[@]}"; do
-
+  log info "处理备份目录：$backup_dir"
+  
   # 声明数组，用于存储上传到B站视频的文件名
   compressed_files=()
   original_files=()
 
   # 处理从临时目录获取的文件路径
   IFS=$'\n' read -d '' -r -a input_files < <(find "$backup_dir" -type f | sort)
+  log debug "备份目录文件数量: ${#input_files[@]}"
 
   # 获取临时目录第一个文件的信息，用于提取直播开始时间和主播名称
   first_file="${input_files[0]}"
@@ -230,41 +248,69 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
 
   # 获取主播名称
   streamer_name=$(echo "$base_filename" | sed -E 's/.*_(.*)\..*/\1/')
+
   if [[ "$streamer_name" == "高机动持盾军官" ]]; then
     streamer_name="括弧笑bilibili"
   fi
-  # 投稿高能切片
-  if [[ "$streamer_name" == "括弧笑bilibili" && "$recording_platform" == "$update_sever" ]]; then    
 
+  log info "直播标题: $stream_title"
+  log info "录制平台: $recording_platform"
+  log info "主播名称: $streamer_name"
+
+  # 投稿
+  if [[ "$streamer_name" == "括弧笑bilibili" && "$recording_platform" == "$update_sever" ]]; then
+    log info "开始投稿准备"
     # 安装xz工具
-    if ! command -v xz-utils &> /dev/null; then
-      echo "未检测到 xz-utils，先安装 xz-utils"
+    if ! command -v xz &> /dev/null; then
+      log info "检测到系统未安装 xz-utils，开始安装..."
       if ! apt install -y xz-utils; then
-        echo "xz-utils 安装失败，退出脚本"
+        log error "安装 xz-utils 失败，脚本退出"
         exit 1
+      else
+        log success "xz-utils 安装成功"
       fi
     fi
 
     # 上传到B站
     if [[ ! -f "$source_backup/biliup-rs" ]]; then
+      log info "检测到未下载 biliup-rs，开始下载..."
       latest_release_biliup_rs=$(curl -s https://api.github.com/repos/biliup/biliup-rs/releases/latest)
       latest_biliup_rs_x64_url=$(echo "$latest_release_biliup_rs" | jq -r ".assets[] | select(.name | test(\"x86_64-linux.tar.xz\")) | .browser_download_url")
       latest_biliup_rs_arm64_url=$(echo "$latest_release_biliup_rs" | jq -r ".assets[] | select(.name | test(\"aarch64-linux.tar.xz\")) | .browser_download_url")
 
       arch=$(uname -m | grep -i -E "x86_64|aarch64")
       if [[ $arch == *"x86_64"* ]]; then
-        wget -O $source_backup/biliup-rs.tar.xz $latest_biliup_rs_x64_url
+        if wget -O $source_backup/biliup-rs.tar.xz "$latest_biliup_rs_x64_url"; then
+          log success "biliup-rs x86_64 版本下载成功"
+        else
+          log error "biliup-rs x86_64 版本下载失败"
+          upload_success=false
+        fi
       elif [[ $arch == *"aarch64"* ]]; then
-        wget -O $source_backup/biliup-rs.tar.xz $latest_biliup_rs_arm64_url
+        if wget -O $source_backup/biliup-rs.tar.xz "$latest_biliup_rs_arm64_url"; then
+          log success "biliup-rs aarch64 版本下载成功"
+        else
+          log error "biliup-rs aarch64 版本下载失败"
+          upload_success=false
+        fi
+      else
+        log error "未知架构，无法下载 biliup-rs"
+        upload_success=false
       fi
+
       mkdir $source_backup/biliup-rs-tmp
-      tar -xf $source_backup/biliup-rs.tar.xz -C $source_backup/biliup-rs-tmp
+      if tar -xf $source_backup/biliup-rs.tar.xz -C $source_backup/biliup-rs-tmp; then
+        log success "biliup-rs 解压成功"
+      else
+        log error "biliup-rs 解压失败"
+        upload_success=false
+      fi
       rm -rf $source_backup/biliup-rs.tar.xz
       biliup_file=$(find $source_backup/biliup-rs-tmp -type f -name "biliup")
       mv $biliup_file $source_backup/biliup-rs
       rm -rf $source_backup/biliup-rs-tmp
+      chmod +x $source_backup/biliup-rs
     fi
-    chmod +x $source_backup/biliup-rs
   fi
 
   for video_file in "${input_files[@]}"; do
@@ -285,53 +331,58 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
           if [[ -f "${backup_dir}/${xml_file}" ]]; then
             # 检查 XML 是否包含有效弹幕（通过匹配<d，<sc，<gift，<guard开头的行）
             if grep -aEq '^\s*<(d|sc|gift|guard)' "${backup_dir}/${xml_file}"; then
+              log info "检测到有效弹幕文件，开始弹幕压制：${backup_dir}"
 
-              # 获取封面
-              biliup_cover_image=$(python3 /rec/封面获取.py "$backup_dir")
+              #biliup_cover_image=$(python3 /rec/封面获取.py "$backup_dir")
+              #log debug "获取封面图片路径：$biliup_cover_image"
 
-              # 使用 DanmakuFactory 生成 ASS 弹幕文件
               chmod +x /DanmakuFactory
-              /DanmakuFactory -i "${backup_dir}/${xml_file}" -o "${backup_dir}/${ass_file}" -S 50 -O 230 --ignore-warnings > /dev/null || upload_success=false
+              if /DanmakuFactory -i "${backup_dir}/${xml_file}" -o "${backup_dir}/${ass_file}" -S 50 -O 230 --ignore-warnings > /dev/null; then
+                log success "DanmakuFactory 弹幕 ASS 文件生成成功"
+              else
+                log error "DanmakuFactory 弹幕 ASS 文件生成失败"
+                upload_success=false
+              fi
 
-              # 压制弹幕
+              # 检查 Intel 显卡驱动安装
               if lspci | grep -i "VGA\|Display" | grep -i "Intel Corporation" > /dev/null; then
-                # 检查是否已安装 Intel 显卡驱动
                 if ! vainfo > /dev/null 2>&1; then
-                  echo "未安装 Intel 显卡驱动。正在安装驱动..."
-                  # 安装所需的软件包
+                  log info "检测到Intel显卡驱动未安装，开始安装..."
                   apt update
                   apt install -y gpg wget
-                  # 下载并添加 Intel 显卡软件仓库的 GPG 密钥
-                  wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | \
-                  gpg --dearmor --output /usr/share/keyrings/intel-graphics.gpg
-                  echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy client" | \
-                  tee /etc/apt/sources.list.d/intel-gpu-jammy.list
-                  # 更新软件包列表
+                  wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | gpg --dearmor --output /usr/share/keyrings/intel-graphics.gpg
+                  echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy client" | tee /etc/apt/sources.list.d/intel-gpu-jammy.list
                   apt update
-                  # 安装 Intel 显卡驱动相关的软件包
                   apt install -y intel-media-va-driver-non-free libmfx1 libmfxgen1 libvpl2 va-driver-all vainfo
+                  log success "Intel显卡驱动安装完成"
                 fi
               fi
 
-              # 检查并安装缺失的库
               for lib in "${!libraries[@]}"; do
                 if ! python3 -c "import $lib" &> /dev/null; then
-                  echo "$lib 未安装，正在通过 apt 安装 ${libraries[$lib]} ..."
-                  apt install -y "${libraries[$lib]}"
-                else
-                  echo "$lib 已安装"
+                  if apt install -y "${libraries[$lib]}"; then
+                    log success "安装Python库 ${libraries[$lib]} 成功"
+                  else
+                    log error "安装Python库 ${libraries[$lib]} 失败"
+                    upload_success=false
+                  fi
                 fi
               done
 
-              # 使用py脚本压制视频
-              python3 /rec/压制视频.py "${backup_dir}/${xml_file}"
+              if python3 /rec/压制视频.py "${backup_dir}/${xml_file}"; then
+                log success "视频弹幕压制完成：$output_file"
+                compressed_files+=("${backup_dir}/${output_file}")
+              else
+                log error "视频弹幕压制失败：$output_file"
+                compressed_files+=("${backup_dir}/${filename}")
+              fi
+              original_files+=("${backup_dir}/${filename}")
 
-              # 添加压制弹幕版到数组
-              compressed_files+=("${backup_dir}/${output_file}")
-              # 删除生成的 ASS 弹幕文件
-              rm -f "${backup_dir}/${ass_file}" || upload_success=false
+            else
+              log warn "弹幕文件内容为空或不符合预期，跳过弹幕压制：${backup_dir}/${xml_file}"
             fi
           else
+            log warn "未检测到弹幕 XML 文件，跳过弹幕压制：${backup_dir}/${xml_file}"
             # 添加视频到数组
             compressed_files+=("${backup_dir}/${filename}")
           fi
@@ -339,6 +390,8 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
           original_files+=("${backup_dir}/${filename}")
         fi
       fi
+    else
+      log warn "视频文件不存在或无法访问：$video_file"
     fi
   done
 
@@ -354,24 +407,47 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     # 计算6小时后的时间戳
     #delay_time_biliup_rs=$((current_time_biliup_rs + 6 * 3600))
     #$source_backup/biliup-rs -u $source_backup/cookies.json upload --copyright 2 --source https://live.bilibili.com/1962720 --tid 17 --title "$upload_title_1" --desc "$upload_desc_1" --tag "搞笑,直播回放,奶茶猪,高机动持盾军官,括弧笑,娱乐主播" --dtime ${delay_time_biliup_rs} "${compressed_files[@]}"
-
+    log info "开始上传视频：${compressed_files[@]}"
     # 正常发布
-    biliup_upload_output=$($source_backup/biliup-rs -u "$source_backup"/cookies-烦心事远离.json upload --copyright 2 --cover "$biliup_cover_image" --source https://live.bilibili.com/1962720 --tid 17 --title "$upload_title_1" --desc "$upload_desc_1" --tag "搞笑,直播回放,奶茶猪,高机动持盾军官,括弧笑,娱乐主播" "${compressed_files[@]}")
-    # 备份压制弹幕版文件，下次执行时会删除
-    danmu_version_backup_dir="${source_backup}/压制版视频文件备份"
-    # 查找以"压制弹幕版-"开头的文件
-    if ls "${backup_dir}/压制版-"* 1> /dev/null 2>&1; then
-      # 检查文件夹是否存在
-      if [ -d "$danmu_version_backup_dir" ]; then
-        rm -rf "$danmu_version_backup_dir"
+    # 执行投稿
+    biliup_upload_output=$("$source_backup/biliup-rs" -u "$source_backup/cookies-烦心事远离.json" upload \
+      --copyright 2 \
+      --cover "$biliup_cover_image" \
+      --source https://live.bilibili.com/1962720 \
+      --tid 17 \
+      --title "$upload_title_1" \
+      --desc "$upload_desc_1" \
+      --tag "搞笑,直播回放,奶茶猪,高机动持盾军官,括弧笑,娱乐主播" \
+    "${compressed_files[@]}")
+
+    # 检查是否包含“投稿成功”关键字
+    if echo "$biliup_upload_output" | grep -q "投稿成功"; then
+      log info "检测到投稿成功，开始备份弹幕压制版文件"
+
+      danmu_version_backup_dir="${source_backup}/压制版视频文件备份"
+
+      # 查找压制弹幕版文件
+      if ls "${backup_dir}/压制版-"* 1> /dev/null 2>&1; then
+        log info "找到压制版文件，准备备份"
+
+        # 清理旧备份目录
+        if [ -d "$danmu_version_backup_dir" ]; then
+          log info "清空已有的备份目录：$danmu_version_backup_dir"
+          rm -rf "$danmu_version_backup_dir"
+        fi
+
         mkdir -p "$danmu_version_backup_dir"
+
+        # 移动压制弹幕版文件
+        mv "${backup_dir}/压制版-"* "$danmu_version_backup_dir"
+        log info "备份完成：压制弹幕版文件已移动到 $danmu_version_backup_dir"
       else
-        mkdir -p "$danmu_version_backup_dir"
+        log info "未找到压制版文件，跳过备份步骤"
       fi
-      mv "${backup_dir}/压制版-"* "$danmu_version_backup_dir"
+    else
+      log info "未检测到投稿成功，跳过压制版文件备份"
     fi
   fi
-
   # 备份到rclone脚本
   if [[ "$streamer_name" == "括弧笑bilibili" ]]; then
     # rclone 网盘路径
@@ -379,22 +455,25 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
   else
     # rclone 网盘路径
     rclone_backup_path="$rclone_onedrive_config:/直播录制/${streamer_name}/"
-  fi
+  fi   
 
   if rclone move "$backup_dir" "${rclone_backup_path}${formatted_start_time_3}/bilibili/$recording_platform/"; then
     # rclone 成功执行
     if [ -z "$(ls -A "$backup_dir")" ]; then
+      log info "rclone 网盘备份成功，删除本地文件夹"
       rmdir "$backup_dir"
     fi
   else
     upload_success=false
+    log warn "rclone 网盘备份失败，请检查"
   fi
 
-  # 推送消息
+  # 发送上传结果消息
   message=$(handle_upload_status "$upload_success" "$streamer_name" "$start_time")
-
+  
   # 推送消息命令
   curl -s -X POST "https://msgpusher.xct258.top/push/root" \
     -d "title=直播录制&description=直播录制&channel=一般通知&content=$message" \
   >/dev/null
 done
+log info "脚本执行完毕"
