@@ -200,8 +200,11 @@ for dir in "${directories[@]}"; do
       mv "$file" "$backup_dir" || upload_success=false
     fi
   done
-  rm -rf "$dir"
-  log success "处理完毕，删除原目录成功：$dir"
+  # 移动成功后删除目录
+  if $upload_success; then
+    rm -rf "$dir"
+    log success "处理完毕，删除原目录成功：$dir"
+  fi
 done
 
 # 按时间排序备份目录
@@ -216,7 +219,6 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
 
   # 处理从临时目录获取的文件路径
   IFS=$'\n' read -d '' -r -a input_files < <(find "$backup_dir" -type f | sort)
-  log debug "备份目录文件数量: ${#input_files[@]}"
 
   # 获取临时目录第一个文件的信息，用于提取直播开始时间和主播名称
   first_file="${input_files[0]}"
@@ -422,30 +424,29 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
 
     # 检查是否包含“投稿成功”关键字
     if echo "$biliup_upload_output" | grep -q "投稿成功"; then
-      log info "检测到投稿成功，开始备份弹幕压制版文件"
-
-      danmu_version_backup_dir="${source_backup}/压制版视频文件备份"
-
-      # 查找压制弹幕版文件
-      if ls "${backup_dir}/压制版-"* 1> /dev/null 2>&1; then
-        log info "找到压制版文件，准备备份"
-
-        # 清理旧备份目录
-        if [ -d "$danmu_version_backup_dir" ]; then
-          log info "清空已有的备份目录：$danmu_version_backup_dir"
-          rm -rf "$danmu_version_backup_dir"
-        fi
-
-        mkdir -p "$danmu_version_backup_dir"
-
-        # 移动压制弹幕版文件
-        mv "${backup_dir}/压制版-"* "$danmu_version_backup_dir"
-        log info "备份完成：压制弹幕版文件已移动到 $danmu_version_backup_dir"
-      else
-        log info "未找到压制版文件，跳过备份步骤"
-      fi
+      log info "投稿成功"
     else
-      log info "未检测到投稿成功，跳过压制版文件备份"
+      log error "投稿失败，请检查"
+    fi
+    danmu_version_backup_dir="${source_backup}/压制版视频文件备份"
+
+    # 查找压制弹幕版文件
+    if ls "${backup_dir}/压制版-"* 1> /dev/null 2>&1; then
+      log info "找到压制版文件，准备备份"
+
+      # 清理旧备份目录
+      if [ -d "$danmu_version_backup_dir" ]; then
+        log info "清空已有的备份目录：$danmu_version_backup_dir"
+        rm -rf "$danmu_version_backup_dir"
+      fi
+
+      mkdir -p "$danmu_version_backup_dir"
+
+      # 移动压制弹幕版文件
+      mv "${backup_dir}/压制版-"* "$danmu_version_backup_dir"
+      log info "备份完成：压制弹幕版文件已移动到 $danmu_version_backup_dir"
+    else
+      log info "未找到压制版文件，跳过备份步骤"
     fi
   fi
   # 备份到rclone脚本
