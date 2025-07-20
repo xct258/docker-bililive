@@ -10,10 +10,13 @@ source_folders=(
 )
 # 设置onedrive网盘
 rclone_onedrive_config="onedrive-video-5"
-# 需要上传视频文件的录制平台。录播姬或者biliup
-update_sever="biliup"
+# 需要上传视频文件的录制平台。录播姬或者biliup，可以为多个
+update_servers=(
+  "biliup"
+  "录播姬"
+)
 # 服务器名称
-sever_name="pve-1-nas-1"
+sever_name="甲骨文-1-debian12-1"
 
 # 定义需要检查的库及其apt包名
 declare -A libraries
@@ -147,7 +150,7 @@ done
 # 遍历每个非空目录
 for dir in "${directories[@]}"; do
   upload_success=true
-
+  log info 处理非空目录${dir}
   # 读取所有文件路径
   IFS=$'\n' read -d '' -r -a input_files < <(find "$dir" -type f \( -name "*.ts" -o -name "*.flv" -o -name "*.mp4" -o -name "*.xml" \) | sort)
 
@@ -187,7 +190,7 @@ for dir in "${directories[@]}"; do
     elif [[ "$ext" == "flv" || "$ext" == "ts" ]]; then
       # 非mp4视频文件，转换为mp4
       output_file="$backup_dir/${filename}.mp4"
-      log info 转换视频文件为mp4格式
+      log info 转换视频文件${file}为mp4格式
       if ffmpeg -i "$file" -c:v copy -c:a copy -v quiet -y "$output_file"; then
         rm "$file"
         log success "转换 $file 到 $output_file 并删除源文件成功"
@@ -260,7 +263,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
   log info "主播名称: $streamer_name"
 
   # 投稿
-  if [[ "$streamer_name" == "括弧笑bilibili" && "$recording_platform" == "$update_sever" ]]; then
+  if [[ "$streamer_name" == "括弧笑bilibili" && " ${update_servers[@]} " =~ " ${recording_platform} " ]]; then
     log info "开始投稿准备"
     # 安装xz工具
     if ! command -v xz &> /dev/null; then
@@ -325,7 +328,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
       filename_no_ext="${filename%.*}"
       # 示例：录播姬_2024年12月01日22点13分_暗区最穷_高机动持盾军官
 
-      if [[ "$streamer_name" == "括弧笑bilibili" && "$recording_platform" == "$update_sever" ]]; then
+      if [[ "$streamer_name" == "括弧笑bilibili" && " ${update_servers[@]} " =~ " ${recording_platform} " ]]; then
         if [[ "$filename" == *.mp4 ]]; then
           xml_file="${filename_no_ext}.xml"
           ass_file="${filename_no_ext}.ass"
@@ -397,7 +400,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     fi
   done
 
-  if [[ "$streamer_name" == "括弧笑bilibili" && "$recording_platform" == "$update_sever" ]]; then
+  if [[ "$streamer_name" == "括弧笑bilibili" && " ${update_servers[@]} " =~ " ${recording_platform} " ]]; then
     # 构建视频标题
     upload_title_1="括弧笑${formatted_start_time_4}直播回放"
     # 构建视频简介
@@ -457,17 +460,17 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     # rclone 网盘路径
     rclone_backup_path="$rclone_onedrive_config:/直播录制/${streamer_name}/"
   fi   
-
-  if rclone move "$backup_dir" "${rclone_backup_path}${formatted_start_time_3}/bilibili/$recording_platform/"; then
+    log warn "rclone 网盘备份关闭"
+  #if rclone move "$backup_dir" "${rclone_backup_path}${formatted_start_time_3}/bilibili/$recording_platform/"; then
     # rclone 成功执行
-    if [ -z "$(ls -A "$backup_dir")" ]; then
-      log info "rclone 网盘备份成功，删除本地文件夹"
-      rmdir "$backup_dir"
-    fi
-  else
-    upload_success=false
-    log warn "rclone 网盘备份失败，请检查"
-  fi
+    #if [ -z "$(ls -A "$backup_dir")" ]; then
+      #log info "rclone 网盘备份成功，删除本地文件夹"
+      #rmdir "$backup_dir"
+    #fi
+  #else
+    #upload_success=false
+    #log warn "rclone 网盘备份失败，请检查"
+  #fi
 
   # 发送上传结果消息
   message=$(handle_upload_status "$upload_success" "$streamer_name" "$start_time")
