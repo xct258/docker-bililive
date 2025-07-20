@@ -13,7 +13,6 @@ rclone_onedrive_config="onedrive-video-5"
 # 需要上传视频文件的录制平台。录播姬或者biliup，可以为多个
 update_servers=(
   "biliup"
-  "录播姬"
 )
 # 服务器名称
 sever_name="甲骨文-1-debian12-1"
@@ -461,16 +460,16 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     rclone_backup_path="$rclone_onedrive_config:/直播录制/${streamer_name}/"
   fi   
     log warn "rclone 网盘备份关闭"
-  #if rclone move "$backup_dir" "${rclone_backup_path}${formatted_start_time_3}/bilibili/$recording_platform/"; then
+  if rclone move "$backup_dir" "${rclone_backup_path}${formatted_start_time_3}/bilibili/$recording_platform/"; then
     # rclone 成功执行
-    #if [ -z "$(ls -A "$backup_dir")" ]; then
-      #log info "rclone 网盘备份成功，删除本地文件夹"
-      #rmdir "$backup_dir"
-    #fi
-  #else
-    #upload_success=false
-    #log warn "rclone 网盘备份失败，请检查"
-  #fi
+    if [ -z "$(ls -A "$backup_dir")" ]; then
+      log info "rclone 网盘备份成功，删除本地文件夹"
+      rmdir "$backup_dir"
+    fi
+  else
+    upload_success=false
+    log warn "rclone 网盘备份失败，请检查"
+  fi
 
   # 发送上传结果消息
   message=$(handle_upload_status "$upload_success" "$streamer_name" "$start_time")
