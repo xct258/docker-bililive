@@ -13,9 +13,11 @@ rclone_onedrive_config="onedrive-video-5"
 # 需要上传视频文件的录制平台。录播姬或者biliup，可以为多个
 update_servers=(
   "biliup"
+  #"录播姬"
 )
-# 服务器名称
-sever_name="甲骨文-1-debian12-1"
+
+# 读取服务器基本信息
+source /root/apps/脚本/config/服务器基本信息.txt
 
 # 定义需要检查的库及其apt包名
 declare -A libraries
@@ -80,14 +82,14 @@ handle_upload_status() {
   local start_time="$3"
 
   if $upload_success; then
-    echo "${sever_name}
+    echo "${$server_name}
 
 ${streamer_name}
 ${start_time}场
 
 视频上传成功"
   else
-    echo "${sever_name}
+    echo "${$server_name}
 
 ${streamer_name}
 ${start_time}场
@@ -97,8 +99,7 @@ ${start_time}场
 }
 
 # 引入日志函数库
-# 假设日志函数脚本名为log.sh，且放在同目录，加载它
-source "$(dirname "${BASH_SOURCE[0]}")/log.sh"
+source "/rec/脚本/log.sh"
 
 log info "脚本开始执行"
 
@@ -337,7 +338,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
             if grep -aEq '^\s*<(d|sc|gift|guard)' "${backup_dir}/${xml_file}"; then
               log info "检测到有效弹幕文件，开始弹幕压制：${backup_dir}"
 
-              #biliup_cover_image=$(python3 /rec/封面获取.py "$backup_dir")
+              #biliup_cover_image=$(python3 /rec/脚本/封面获取.py "$backup_dir")
               #log debug "获取封面图片路径：$biliup_cover_image"
 
               chmod +x /DanmakuFactory
@@ -373,7 +374,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
                 fi
               done
 
-              if python3 /rec/压制视频.py "${backup_dir}/${xml_file}"; then
+              if python3 /rec/脚本/压制视频.py "${backup_dir}/${xml_file}"; then
                 log success "视频弹幕压制完成：$output_file"
                 compressed_files+=("${backup_dir}/${output_file}")
               else
@@ -414,7 +415,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     log info "开始上传视频：${compressed_files[@]}"
     # 正常发布
     # 执行投稿
-    biliup_upload_output=$("$source_backup/biliup-rs" -u "$source_backup/cookies-烦心事远离.json" upload \
+    biliup_upload_output=$("$source_backup/biliup-rs" -u "$source_backup/cookies/bilibili/cookies-烦心事远离.json" upload \
       --copyright 2 \
       --cover "$biliup_cover_image" \
       --source https://live.bilibili.com/1962720 \
@@ -459,7 +460,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     # rclone 网盘路径
     rclone_backup_path="$rclone_onedrive_config:/直播录制/${streamer_name}/"
   fi   
-    log warn "rclone 网盘备份关闭"
+  #log warn "rclone 网盘备份关闭"
   if rclone move "$backup_dir" "${rclone_backup_path}${formatted_start_time_3}/bilibili/$recording_platform/"; then
     # rclone 成功执行
     if [ -z "$(ls -A "$backup_dir")" ]; then

@@ -27,6 +27,7 @@ RUN apt-get update \
     # 创建工作目录
     && mkdir -p /rec/biliup \
     && mkdir -p /rec/录播姬 \
+    && mkdir -p /rec/脚本 \
     # 创建临时目录
     && mkdir -p /root/tmp \
     # 创建临时脚本
@@ -34,26 +35,43 @@ RUN apt-get update \
     && echo 'latest_release_7z=$(curl -s https://api.github.com/repos/ip7z/7zip/releases/latest)' >> /root/tmp/tmp.sh \
     && echo 'latest_7z_x64_url=$(echo "$latest_release_7z" | jq -r ".assets[] | select(.name | test(\"linux-x64.tar.xz\")) | .browser_download_url")' >> /root/tmp/tmp.sh \
     && echo 'latest_7z_arm64_url=$(echo "$latest_release_7z" | jq -r ".assets[] | select(.name | test(\"linux-arm64.tar.xz\")) | .browser_download_url")' >> /root/tmp/tmp.sh \
+    && echo 'latest_release_biliup_rs=$(curl -s https://api.github.com/repos/biliup/biliup-rs/releases/latest)' >> /root/tmp/tmp.sh \
+    && echo 'latest_biliup_rs_x64_url=$(echo "$latest_release_biliup_rs" | jq -r ".assets[] | select(.name | test(\"x86_64-linux.tar.xz\")) | .browser_download_url")' >> /root/tmp/tmp.sh \
+    && echo 'latest_biliup_rs_arm64_url=$(echo "$latest_release_biliup_rs" | jq -r ".assets[] | select(.name | test(\"aarch64-linux.tar.xz\")) | .browser_download_url")' >> /root/tmp/tmp.sh \
     && echo 'arch=$(uname -m)' >> /root/tmp/tmp.sh \
     && echo 'if [[ $arch == *"x86_64"* ]]; then' >> /root/tmp/tmp.sh \
     && echo '    wget -O /root/tmp/7zz.tar.xz "$latest_7z_x64_url"' >> /root/tmp/tmp.sh \
+    && echo '    wget -O /root/tmp/biliup.tar.xz "$latest_biliup_rs_x64_url"' >> /root/tmp/tmp.sh \
     && echo '    wget -O /root/tmp/BililiveRecorder-CLI.zip https://github.com/BililiveRecorder/BililiveRecorder/releases/latest/download/BililiveRecorder-CLI-linux-x64.zip' >> /root/tmp/tmp.sh \
     && echo '    wget -O /DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/DanmakuFactory/DanmakuFactory-amd64' >> /root/tmp/tmp.sh \
     && echo 'elif [[ $arch == *"aarch64"* ]]; then' >> /root/tmp/tmp.sh \
     && echo '    wget -O /root/tmp/7zz.tar.xz "$latest_7z_arm64_url"' >> /root/tmp/tmp.sh \
+    && echo '    wget -O /root/tmp/biliup-rs.tar.xz "$latest_biliup_rs_arm64_url"' >> /root/tmp/tmp.sh \
     && echo '    wget -O /root/tmp/BililiveRecorder-CLI.zip https://github.com/BililiveRecorder/BililiveRecorder/releases/latest/download/BililiveRecorder-CLI-linux-arm64.zip' >> /root/tmp/tmp.sh \
     && echo '    wget -O /DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/DanmakuFactory/DanmakuFactory-arm64' >> /root/tmp/tmp.sh \
     && echo 'fi' >> /root/tmp/tmp.sh \
+    && echo '# 下载相关脚本' >> /root/tmp/tmp.sh \
+    && echo 'wget -O /rec/脚本/录播上传备份脚本.sh https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/录播上传备份脚本.sh' >> /root/tmp/tmp.sh \
+    && echo 'wget -O /rec/脚本/压制视频.py https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/压制视频.py' >> /root/tmp/tmp.sh \
+    && echo 'wget -O /rec/脚本/封面获取.py https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/封面获取.py' >> /root/tmp/tmp.sh \
+    && echo 'wget -O /rec/脚本/biliup后处理.sh https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/biliup后处理.sh' >> /root/tmp/tmp.sh \
+    && echo 'wget -O /rec/脚本/log.sh https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/log.sh' >> /root/tmp/tmp.sh \
     # 赋予脚本执行权限
     && chmod +x /root/tmp/tmp.sh \
     # 执行下载脚本
     && /root/tmp/tmp.sh \
     # 解压下载的 7zip
     && tar -xf /root/tmp/7zz.tar.xz -C /root/tmp \
+    # 解压下载的biliup-rs
+    && tar -xf /root/tmp/biliup-rs.tar.xz -C /root/tmp \
     # 赋予解压后的 7zz 执行权限
     && chmod +x /root/tmp/7zz \
+    # 赋予解压后的 biliup-rs 执行权限
+    && chmod +x /root/tmp/biliup-rs \
     # 移动 7zz 到 /bin 目录
     && mv /root/tmp/7zz /bin/7zz \
+    # 移动biliup-rs到工作目录
+    && mv /root/tmp/biliup-rs /rec \
     # 使用 7zz 解压 BililiveRecorder CLI
     && 7zz x /root/tmp/BililiveRecorder-CLI.zip -o/root/BililiveRecorder \
     # 赋予 BililiveRecorder CLI 执行权限
@@ -64,29 +82,20 @@ RUN apt-get update \
     && rm -rf /root/tmp \
     # 创建启动脚本
     && echo '#!/bin/bash' >> /usr/local/bin/start.sh \
-    # 创建工作目录
-    && echo 'mkdir -p /rec/biliup' >> /usr/local/bin/start.sh \
-    && echo 'mkdir -p /rec/录播姬' >> /usr/local/bin/start.sh \
     && echo 'if [ -n "$XCT258_GITHUB_TOKEN" ]; then' >> /usr/local/bin/start.sh \
     && echo '  echo "检测到 XCT258_GITHUB_TOKEN，准备检查并下载私有配置文件..."' >> /usr/local/bin/start.sh \
     && echo '  mkdir -p /root/.config/rclone' >> /usr/local/bin/start.sh \
     && echo '  if [ ! -f "/root/.config/rclone/rclone.conf" ]; then' >> /usr/local/bin/start.sh \
     && echo '    echo "未检测到 rclone.conf，开始下载..."' >> /usr/local/bin/start.sh \
     && echo '    wget --header="Authorization: token $XCT258_GITHUB_TOKEN" -O "/root/.config/rclone/rclone.conf" "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/rclone/rclone.conf"' >> /usr/local/bin/start.sh \
-    && echo '  else' >> /usr/local/bin/start.sh \
-    && echo '    echo "已存在 rclone.conf，跳过下载"' >> /usr/local/bin/start.sh \
     && echo '  fi' >> /usr/local/bin/start.sh \
-    && echo '  if [ ! -f "/rec/cookies-烦心事远离.json" ]; then' >> /usr/local/bin/start.sh \
+    && echo '  if [ ! -f "/rec/cookies/bilibili/cookies-烦心事远离.json" ]; then' >> /usr/local/bin/start.sh \
     && echo '    echo "未检测到 cookies-烦心事远离.json，开始下载..."' >> /usr/local/bin/start.sh \
-    && echo '    wget --header="Authorization: token $XCT258_GITHUB_TOKEN" -O "/rec/cookies-烦心事远离.json" "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/b站cookies/cookies-b站-烦心事远离.json"' >> /usr/local/bin/start.sh \
-    && echo '  else' >> /usr/local/bin/start.sh \
-    && echo '    echo "已存在 cookies-烦心事远离.json，跳过下载"' >> /usr/local/bin/start.sh \
+    && echo '    wget --header="Authorization: token $XCT258_GITHUB_TOKEN" -O "/rec/cookies/bilibili/cookies-烦心事远离.json" "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/b站cookies/cookies-b站-烦心事远离.json"' >> /usr/local/bin/start.sh \
     && echo '  fi' >> /usr/local/bin/start.sh \
-    && echo '  if [ ! -f "/rec/biliup/cookies-xct258-2.json" ]; then' >> /usr/local/bin/start.sh \
+    && echo '  if [ ! -f "/rec/cookies/bilibili/cookies-xct258-2.json" ]; then' >> /usr/local/bin/start.sh \
     && echo '    echo "未检测到 cookies-xct258-2.json，开始下载..."' >> /usr/local/bin/start.sh \
-    && echo '    wget --header="Authorization: token $XCT258_GITHUB_TOKEN" -O "/rec/biliup/cookies-xct258-2.json" "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/b站cookies/cookies-b站-xct258-2.json"' >> /usr/local/bin/start.sh \
-    && echo '  else' >> /usr/local/bin/start.sh \
-    && echo '    echo "已存在 cookies-xct258-2.json，跳过下载"' >> /usr/local/bin/start.sh \
+    && echo '    wget --header="Authorization: token $XCT258_GITHUB_TOKEN" -O "/rec/cookies/bilibili/cookies-xct258-2.json" "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/b站cookies/cookies-b站-xct258-2.json"' >> /usr/local/bin/start.sh \
     && echo '  fi' >> /usr/local/bin/start.sh \
     && echo 'fi' >> /usr/local/bin/start.sh \
     && echo 'if [ -f /root/.credentials ]; then' >> /usr/local/bin/start.sh \
@@ -142,26 +151,19 @@ RUN apt-get update \
     && echo '  echo "biliup运行中"' >> /usr/local/bin/start.sh \
     && echo '  echo "------------------------------------"' >> /usr/local/bin/start.sh \
     && echo 'fi' >> /usr/local/bin/start.sh \
-    # 检查备份脚本是否存在
-    && echo '# 检查备份脚本是否存在' >> /usr/local/bin/start.sh \
-    && echo 'if [ -f "/rec/$FILE_BACKUP_SH" ]; then' >> /usr/local/bin/start.sh \
-    # 赋予备份脚本执行权限
-    && echo '    chmod +x "/rec/$FILE_BACKUP_SH"' >> /usr/local/bin/start.sh \
-    # 提示备份脚本正在执行
-    && echo '    echo "备份脚本执行中"' >> /usr/local/bin/start.sh \
     # 创建调度脚本
-    && echo '    # 创建调度脚本' >> /usr/local/bin/start.sh \
-    && echo '    SCHEDULER_SCRIPT="/usr/local/bin/执行视频备份脚本.sh"' >> /usr/local/bin/start.sh \
+    && echo '# 创建调度脚本' >> /usr/local/bin/start.sh \
+    && echo 'SCHEDULER_SCRIPT="/usr/local/bin/执行视频备份脚本.sh"' >> /usr/local/bin/start.sh \
     # 写入调度脚本内容
     && echo 'cat << EOF > "$SCHEDULER_SCRIPT"' >> /usr/local/bin/start.sh \
     && echo '#!/bin/bash' >> /usr/local/bin/start.sh \
     && echo 'schedule_sleep_time="02:00"' >> /usr/local/bin/start.sh \
     && echo 'while true; do' >> /usr/local/bin/start.sh \
-    && echo '  echo "\$(date)" > /rec/backup.log 2>&1' >> /usr/local/bin/start.sh \
-    && echo '  echo "----------------------------" >> /rec/backup.log 2>&1' >> /usr/local/bin/start.sh \
-    && echo '  /rec/\$FILE_BACKUP_SH >> /rec/backup.log 2>&1' >> /usr/local/bin/start.sh \
-    && echo '  echo "----------------------------" >> /rec/backup.log 2>&1' >> /usr/local/bin/start.sh \
-    && echo '  echo "\$(date)" >> /rec/backup.log 2>&1' >> /usr/local/bin/start.sh \
+    && echo '  echo "\$(date)" > /rec/录播上传备份脚本.log 2>&1' >> /usr/local/bin/start.sh \
+    && echo '  echo "----------------------------" >> /rec/录播上传备份脚本.log 2>&1' >> /usr/local/bin/start.sh \
+    && echo '  /rec/脚本/录播上传备份脚本.sh >> /rec/录播上传备份脚本.log 2>&1' >> /usr/local/bin/start.sh \
+    && echo '  echo "----------------------------" >> /rec/录播上传备份脚本.log 2>&1' >> /usr/local/bin/start.sh \
+    && echo '  echo "\$(date)" >> /rec/录播上传备份脚本.log 2>&1' >> /usr/local/bin/start.sh \
     && echo '  current_date=\$(date +%Y-%m-%d)' >> /usr/local/bin/start.sh \
     && echo '  target_time="\${current_date} \$schedule_sleep_time"' >> /usr/local/bin/start.sh \
     # 计算时间差
@@ -175,15 +177,9 @@ RUN apt-get update \
     && echo 'done' >> /usr/local/bin/start.sh \
     && echo 'EOF' >> /usr/local/bin/start.sh \
     # 赋予调度脚本执行权限
-    && echo '    chmod +x "$SCHEDULER_SCRIPT"' >> /usr/local/bin/start.sh \
+    && echo 'chmod +x "$SCHEDULER_SCRIPT"' >> /usr/local/bin/start.sh \
     # 启动调度脚本
-    && echo '    $SCHEDULER_SCRIPT' >> /usr/local/bin/start.sh \
-    && echo 'else' >> /usr/local/bin/start.sh \
-    # 提示用户备份脚本不存在
-    && echo '    echo "------------------------------------"' >> /usr/local/bin/start.sh \
-    && echo '    echo "备份脚本不存在，可以在启动时指定FILE_BACKUP_SH变量来执行一个sh脚本备份录制的视频"' >> /usr/local/bin/start.sh \
-    && echo '    echo "------------------------------------"' >> /usr/local/bin/start.sh \
-    && echo 'fi' >> /usr/local/bin/start.sh \
+    && echo '$SCHEDULER_SCRIPT' >> /usr/local/bin/start.sh \
     && echo 'echo "------------------------------------"' >> /usr/local/bin/start.sh \
     && echo 'echo "当前录播姬用户名:"' >> /usr/local/bin/start.sh \
     && echo 'echo "$Bililive_USER"' >> /usr/local/bin/start.sh \
