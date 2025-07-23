@@ -25,7 +25,10 @@ RUN apt-get update \
     # 安装rclone
     && apt install rclone -y \
     # 创建目录和构造脚本
-    && mkdir -p /rec/biliup /rec/录播姬 /rec/脚本 /root/tmp \
+    && mkdir -p /rec/biliup \
+    && mkdir -p /rec/录播姬 \
+    && mkdir -p /rec/脚本 \
+    && mkdir -p /root/tmp \
     && echo '#!/bin/bash' > /root/tmp/tmp.sh \
     && echo 'latest_release_7z=$(curl -s https://api.github.com/repos/ip7z/7zip/releases/latest)' >> /root/tmp/tmp.sh \
     && echo 'latest_7z_x64_url=$(echo "$latest_release_7z" | jq -r ".assets[] | select(.name | test(\"linux-x64.tar.xz\")) | .browser_download_url")' >> /root/tmp/tmp.sh \
@@ -53,11 +56,11 @@ RUN apt-get update \
     && echo 'mv $biliup_file /rec/biliup-rs' >> /root/tmp/tmp.sh \
     && echo 'mkdir -p /root/BililiveRecorder' >> /root/tmp/tmp.sh \
     && echo '7zz x /root/tmp/BililiveRecorder-CLI.zip -o/root/BililiveRecorder' >> /root/tmp/tmp.sh \
-    && echo 'wget -O /rec/上传备份脚本配置文件.conf https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/上传备份脚本配置文件.sh' >> /root/tmp/tmp.sh \
+    && echo 'wget -O /rec/上传备份脚本配置文件.conf https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/上传备份脚本配置文件.conf' >> /root/tmp/tmp.sh \
     && echo 'wget -O /rec/脚本/录播上传备份脚本.sh https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/录播上传备份脚本.sh' >> /root/tmp/tmp.sh \
     && echo 'wget -O /rec/脚本/压制视频.py https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/压制视频.py' >> /root/tmp/tmp.sh \
     && echo 'wget -O /rec/脚本/封面获取.py https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/封面获取.py' >> /root/tmp/tmp.sh \
-    && echo 'wget -O /rec/脚本/biliup后处理.sh https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/biliup后处理.sh' >> /root/tmp/tmp.sh \
+    && echo 'wget -O /rec/脚本/biliup后处理.sh https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/biliup/biliup后处理.sh' >> /root/tmp/tmp.sh \
     && echo 'wget -O /rec/脚本/log.sh https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/log.sh' >> /root/tmp/tmp.sh \
     && chmod +x /root/tmp/tmp.sh \
     && /root/tmp/tmp.sh \
