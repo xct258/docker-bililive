@@ -53,6 +53,7 @@ RUN apt-get update \
     && echo 'mv $biliup_file /rec/biliup-rs' >> /root/tmp/tmp.sh \
     && echo 'mkdir -p /root/BililiveRecorder' >> /root/tmp/tmp.sh \
     && echo '7zz x /root/tmp/BililiveRecorder-CLI.zip -o/root/BililiveRecorder' >> /root/tmp/tmp.sh \
+    && echo 'wget -O /rec/上传备份脚本配置文件.conf https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/上传备份脚本配置文件.sh' >> /root/tmp/tmp.sh \
     && echo 'wget -O /rec/脚本/录播上传备份脚本.sh https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/录播上传备份脚本.sh' >> /root/tmp/tmp.sh \
     && echo 'wget -O /rec/脚本/压制视频.py https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/压制视频.py' >> /root/tmp/tmp.sh \
     && echo 'wget -O /rec/脚本/封面获取.py https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/封面获取.py' >> /root/tmp/tmp.sh \

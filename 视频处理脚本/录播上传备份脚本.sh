@@ -2,22 +2,9 @@
 
 # 设置工作目录和备份文件件路径
 source_backup="/rec"
-# 设置视频源文件夹路径，会处理设置目录中的的文件夹里的视频，不会处理设置目录中的视频
-source_folders=(
-  "${source_backup}/biliup/video"
-  "${source_backup}/录播姬/video"
-  # 可以继续添加其它目录
-)
-# 设置onedrive网盘
-rclone_onedrive_config="onedrive-video-5"
-# 需要上传视频文件的录制平台。录播姬或者biliup，可以为多个
-update_servers=(
-  "biliup"
-  #"录播姬"
-)
 
-# 读取服务器基本信息
-source /root/apps/脚本/config/服务器基本信息.txt
+# 读取配置文件
+source /rec/上传备份脚本配置文件.conf
 
 # 定义需要检查的库及其apt包名
 declare -A libraries
@@ -415,7 +402,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     log info "开始上传视频：${compressed_files[@]}"
     # 正常发布
     # 执行投稿
-    biliup_upload_output=$("$source_backup/biliup-rs" -u "$source_backup/cookies/bilibili/cookies-烦心事远离.json" upload \
+    biliup_upload_output=$("$source_backup/biliup-rs" -u "${biliup-rs_up_cookies}" upload \
       --copyright 2 \
       --cover "$biliup_cover_image" \
       --source https://live.bilibili.com/1962720 \
