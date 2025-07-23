@@ -24,10 +24,9 @@ RUN apt-get update \
     && fc-cache -f -v \
     # 安装rclone
     && apt install rclone -y \
-# 创建目录和构造脚本
-    && mkdir -p /rec/biliup /rec/录播姬 /rec/脚本 \
+    # 创建目录和构造脚本
+    && mkdir -p /rec/biliup /rec/录播姬 /rec/脚本 /root/tmp \
     && echo '#!/bin/bash' > /root/tmp/tmp.sh \
-    && echo 'mkdir -p /root/tmp' >> /root/tmp/tmp.sh \
     && echo 'latest_release_7z=$(curl -s https://api.github.com/repos/ip7z/7zip/releases/latest)' >> /root/tmp/tmp.sh \
     && echo 'latest_7z_x64_url=$(echo "$latest_release_7z" | jq -r ".assets[] | select(.name | test(\"linux-x64.tar.xz\")) | .browser_download_url")' >> /root/tmp/tmp.sh \
     && echo 'latest_7z_arm64_url=$(echo "$latest_release_7z" | jq -r ".assets[] | select(.name | test(\"linux-arm64.tar.xz\")) | .browser_download_url")' >> /root/tmp/tmp.sh \
