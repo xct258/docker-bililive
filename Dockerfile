@@ -25,55 +25,40 @@ RUN apt-get update \
     # 安装rclone
     && apt install rclone -y \
 # 创建目录和构造脚本
-RUN mkdir -p /rec/biliup /rec/录播姬 /rec/脚本 \
-    && echo '#!/bin/bash
-
-# 创建临时目录
-mkdir -p /root/tmp
-
-# 获取最新版本信息
-latest_release_7z=$(curl -s https://api.github.com/repos/ip7z/7zip/releases/latest)
-latest_7z_x64_url=$(echo "$latest_release_7z" | jq -r ".assets[] | select(.name | test(\"linux-x64.tar.xz\")) | .browser_download_url")
-latest_7z_arm64_url=$(echo "$latest_release_7z" | jq -r ".assets[] | select(.name | test(\"linux-arm64.tar.xz\")) | .browser_download_url")
-
-latest_release_biliup_rs=$(curl -s https://api.github.com/repos/biliup/biliup-rs/releases/latest)
-latest_biliup_rs_x64_url=$(echo "$latest_release_biliup_rs" | jq -r ".assets[] | select(.name | test(\"x86_64-linux.tar.xz\")) | .browser_download_url")
-latest_biliup_rs_arm64_url=$(echo "$latest_release_biliup_rs" | jq -r ".assets[] | select(.name | test(\"aarch64-linux.tar.xz\")) | .browser_download_url")
-
-arch=$(uname -m)
-
-# 下载对应架构的 7z、biliup-rs、BililiveRecorder、DanmakuFactory
-if [[ $arch == *"x86_64"* ]]; then
-    wget -O /root/tmp/7zz.tar.xz "$latest_7z_x64_url"
-    wget -O /root/tmp/biliup-rs.tar.xz "$latest_biliup_rs_x64_url"
-    wget -O /root/tmp/BililiveRecorder-CLI.zip https://github.com/BililiveRecorder/BililiveRecorder/releases/latest/download/BililiveRecorder-CLI-linux-x64.zip
-    wget -O /DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/DanmakuFactory/DanmakuFactory-amd64
-elif [[ $arch == *"aarch64"* ]]; then
-    wget -O /root/tmp/7zz.tar.xz "$latest_7z_arm64_url"
-    wget -O /root/tmp/biliup-rs.tar.xz "$latest_biliup_rs_arm64_url"
-    wget -O /root/tmp/BililiveRecorder-CLI.zip https://github.com/BililiveRecorder/BililiveRecorder/releases/latest/download/BililiveRecorder-CLI-linux-arm64.zip
-    wget -O /DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/DanmakuFactory/DanmakuFactory-arm64
-fi
-
-# 解压并移动
-tar -xf /root/tmp/7zz.tar.xz -C /root/tmp
-tar -xf /root/tmp/biliup-rs.tar.xz -C /root/tmp
-chmod +x /root/tmp/7zz
-mv /root/tmp/7zz /bin/7zz
-biliup_file=$(find /root/tmp -type f -name "biliup")
-mv $biliup_file /rec/biliup-rs
-
-# 解压 BililiveRecorder CLI
-mkdir -p /root/BililiveRecorder
-7zz x /root/tmp/BililiveRecorder-CLI.zip -o/root/BililiveRecorder
-
-# 下载脚本
-wget -O /rec/脚本/录播上传备份脚本.sh https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/录播上传备份脚本.sh
-wget -O /rec/脚本/压制视频.py https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/压制视频.py
-wget -O /rec/脚本/封面获取.py https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/封面获取.py
-wget -O /rec/脚本/biliup后处理.sh https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/biliup后处理.sh
-wget -O /rec/脚本/log.sh https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/log.sh
-' > /root/tmp/tmp.sh \
+    && mkdir -p /rec/biliup /rec/录播姬 /rec/脚本 \
+    && echo '#!/bin/bash' > /root/tmp/tmp.sh \
+    && echo 'mkdir -p /root/tmp' >> /root/tmp/tmp.sh \
+    && echo 'latest_release_7z=$(curl -s https://api.github.com/repos/ip7z/7zip/releases/latest)' >> /root/tmp/tmp.sh \
+    && echo 'latest_7z_x64_url=$(echo "$latest_release_7z" | jq -r ".assets[] | select(.name | test(\"linux-x64.tar.xz\")) | .browser_download_url")' >> /root/tmp/tmp.sh \
+    && echo 'latest_7z_arm64_url=$(echo "$latest_release_7z" | jq -r ".assets[] | select(.name | test(\"linux-arm64.tar.xz\")) | .browser_download_url")' >> /root/tmp/tmp.sh \
+    && echo 'latest_release_biliup_rs=$(curl -s https://api.github.com/repos/biliup/biliup-rs/releases/latest)' >> /root/tmp/tmp.sh \
+    && echo 'latest_biliup_rs_x64_url=$(echo "$latest_release_biliup_rs" | jq -r ".assets[] | select(.name | test(\"x86_64-linux.tar.xz\")) | .browser_download_url")' >> /root/tmp/tmp.sh \
+    && echo 'latest_biliup_rs_arm64_url=$(echo "$latest_release_biliup_rs" | jq -r ".assets[] | select(.name | test(\"aarch64-linux.tar.xz\")) | .browser_download_url")' >> /root/tmp/tmp.sh \
+    && echo 'arch=$(uname -m)' >> /root/tmp/tmp.sh \
+    && echo 'if [[ $arch == *"x86_64"* ]]; then' >> /root/tmp/tmp.sh \
+    && echo '    wget -O /root/tmp/7zz.tar.xz "$latest_7z_x64_url"' >> /root/tmp/tmp.sh \
+    && echo '   wget -O /root/tmp/biliup-rs.tar.xz "$latest_biliup_rs_x64_url"' >> /root/tmp/tmp.sh \
+    && echo '    wget -O /root/tmp/BililiveRecorder-CLI.zip https://github.com/BililiveRecorder/BililiveRecorder/releases/latest/download/BililiveRecorder-CLI-linux-x64.zip' >> /root/tmp/tmp.sh \
+    && echo '    wget -O /DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/DanmakuFactory/DanmakuFactory-amd64' >> /root/tmp/tmp.sh \
+    && echo 'elif [[ $arch == *"aarch64"* ]]; then' >> /root/tmp/tmp.sh \
+    && echo '    wget -O /root/tmp/7zz.tar.xz "$latest_7z_arm64_url"' >> /root/tmp/tmp.sh \
+    && echo '    wget -O /root/tmp/biliup-rs.tar.xz "$latest_biliup_rs_arm64_url"' >> /root/tmp/tmp.sh \
+    && echo '    wget -O /root/tmp/BililiveRecorder-CLI.zip https://github.com/BililiveRecorder/BililiveRecorder/releases/latest/download/BililiveRecorder-CLI-linux-arm64.zip' >> /root/tmp/tmp.sh \
+    && echo '   wget -O /DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/DanmakuFactory/DanmakuFactory-arm64' >> /root/tmp/tmp.sh \
+    && echo 'fi' >> /root/tmp/tmp.sh \
+    && echo 'tar -xf /root/tmp/7zz.tar.xz -C /root/tmp' >> /root/tmp/tmp.sh \
+    && echo 'tar -xf /root/tmp/biliup-rs.tar.xz -C /root/tmp' >> /root/tmp/tmp.sh \
+    && echo 'chmod +x /root/tmp/7zz' >> /root/tmp/tmp.sh \
+    && echo 'mv /root/tmp/7zz /bin/7zz' >> /root/tmp/tmp.sh \
+    && echo 'biliup_file=$(find /root/tmp -type f -name "biliup")' >> /root/tmp/tmp.sh \
+    && echo 'mv $biliup_file /rec/biliup-rs' >> /root/tmp/tmp.sh \
+    && echo 'mkdir -p /root/BililiveRecorder' >> /root/tmp/tmp.sh \
+    && echo '7zz x /root/tmp/BililiveRecorder-CLI.zip -o/root/BililiveRecorder' >> /root/tmp/tmp.sh \
+    && echo 'wget -O /rec/脚本/录播上传备份脚本.sh https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/录播上传备份脚本.sh' >> /root/tmp/tmp.sh \
+    && echo 'wget -O /rec/脚本/压制视频.py https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/压制视频.py' >> /root/tmp/tmp.sh \
+    && echo 'wget -O /rec/脚本/封面获取.py https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/封面获取.py' >> /root/tmp/tmp.sh \
+    && echo 'wget -O /rec/脚本/biliup后处理.sh https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/biliup后处理.sh' >> /root/tmp/tmp.sh \
+    && echo 'wget -O /rec/脚本/log.sh https://raw.githubusercontent.com/xct258/docker-bililive/refs/heads/main/视频处理脚本/log.sh' >> /root/tmp/tmp.sh \
     && chmod +x /root/tmp/tmp.sh \
     && /root/tmp/tmp.sh \
     # 赋予 BililiveRecorder CLI 执行权限
