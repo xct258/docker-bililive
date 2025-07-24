@@ -79,10 +79,7 @@ else
 fi
 
 # 启动 BililiveRecorder
-/root/BililiveRecorder/BililiveRecorder.Cli run \
-  --bind "http://*:2356" \
-  --http-basic-user "$Bililive_USER" \
-  --http-basic-pass "$Bililive_PASS" > /dev/null 2>&1 &
+/root/BililiveRecorder/BililiveRecorder.Cli run --bind "http://*:2356" --http-basic-user "$Bililive_USER" --http-basic-pass "$Bililive_PASS" "/rec/录播姬" > /dev/null 2>&1 &
 
 # 检查 Bililive 是否启动成功
 sleep 2
