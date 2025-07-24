@@ -17,7 +17,7 @@ if [[ $arch == *"x86_64"* ]]; then
     wget -O /root/tmp/7zz.tar.xz "$latest_7z_x64_url"
     wget -O /root/tmp/biliup-rs.tar.xz "$latest_biliup_rs_x64_url"
     wget -O /root/tmp/BililiveRecorder-CLI.zip https://github.com/BililiveRecorder/BililiveRecorder/releases/latest/download/BililiveRecorder-CLI-linux-x64.zip
-    wget -O /DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/main/DanmakuFactory/DanmakuFactory-amd64
+    wget -O /root/tmp/DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/main/DanmakuFactory/DanmakuFactory-amd64
 elif [[ $arch == *"aarch64"* ]]; then
     wget -O /root/tmp/7zz.tar.xz "$latest_7z_arm64_url"
     wget -O /root/tmp/biliup-rs.tar.xz "$latest_biliup_rs_arm64_url"
