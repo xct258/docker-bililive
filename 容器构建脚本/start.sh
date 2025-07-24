@@ -3,29 +3,30 @@
 mkdir -p /rec/biliup
 mkdir -p /rec/录播姬
 mkdir -p /rec/脚本
-
-# 定义源目录和文件清单
-SRC_DIR=/opt/bililive/scripts
-FILES=(
-    录播上传备份脚本.sh
-    biliup后处理.sh
-    压制视频.py
-    封面获取.py
-    log.sh
-)
+mkdir -p /rec/apps
 
 # 配置文件单独处理
 if [ ! -f /rec/上传备份脚本配置文件.conf ]; then
     cp /opt/bililive/config/上传备份脚本配置文件.conf /rec/
 fi
 
-# 逐个检查脚本文件是否存在
-for file in "${FILES[@]}"; do
-    if [ ! -f "/rec/脚本/$file" ]; then
-        cp "$SRC_DIR/$file" "/rec/脚本/$file"
+# 复制 /opt/bililive/scripts 到 /rec/脚本
+for file in /opt/bililive/scripts/*; do
+    filename=$(basename "$file")
+    target="/rec/脚本/$filename"
+    if [ -f "$file" ] && [ ! -f "$target" ]; then
+        cp "$file" "$target"
     fi
 done
 
+# 复制 /opt/bililive/apps 到 /rec/apps
+for file in /opt/bililive/apps/*; do
+    filename=$(basename "$file")
+    target="/rec/apps/$filename"
+    if [ -f "$file" ] && [ ! -f "$target" ]; then
+        cp "$file" "$target"
+    fi
+done
 
 # 下载私有配置文件（需 GitHub Token）
 if [ -n "$XCT258_GITHUB_TOKEN" ]; then

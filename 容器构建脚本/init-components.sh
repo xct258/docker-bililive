@@ -20,7 +20,7 @@ elif [[ $arch == *"aarch64"* ]]; then
     wget -O /root/tmp/7zz.tar.xz "$latest_7z_arm64_url"
     wget -O /root/tmp/biliup-rs.tar.xz "$latest_biliup_rs_arm64_url"
     wget -O /root/tmp/BililiveRecorder-CLI.zip https://github.com/BililiveRecorder/BililiveRecorder/releases/latest/download/BililiveRecorder-CLI-linux-arm64.zip
-    wget -O /DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/main/DanmakuFactory/DanmakuFactory-arm64
+    wget -O /root/tmp/DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/main/DanmakuFactory/DanmakuFactory-arm64
 fi
 
 # 解压与移动
@@ -29,7 +29,8 @@ tar -xf /root/tmp/biliup-rs.tar.xz -C /root/tmp
 chmod +x /root/tmp/7zz
 mv /root/tmp/7zz /bin/7zz
 biliup_file=$(find /root/tmp -type f -name "biliup")
-mv "$biliup_file" /rec/biliup-rs
+mv "$biliup_file" /opt/bililive/apps/biliup-rs
+mv /root/tmp/DanmakuFactory /opt/bililive/apps/DanmakuFactory
 
 mkdir -p /root/BililiveRecorder
 7zz x /root/tmp/BililiveRecorder-CLI.zip -o/root/BililiveRecorder
