@@ -36,7 +36,7 @@ mkdir -p /root/BililiveRecorder
 7zz x /root/tmp/BililiveRecorder-CLI.zip -o/root/BililiveRecorder
 
 # 下载视频处理相关脚本
-mkdir -p /opt/bililive/scripts /opt/bililive/config
+mkdir -p /opt/bililive/scripts /opt/bililive/config /opt/bililive/apps
 wget -O /opt/bililive/config/上传备份脚本配置文件.conf https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/上传备份脚本配置文件.conf
 wget -O /opt/bililive/scripts/录播上传备份脚本.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/录播上传备份脚本.sh
 wget -O /opt/bililive/scripts/压制视频.py https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/压制视频.py
