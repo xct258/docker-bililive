@@ -25,9 +25,6 @@ RUN apt-get update \
     # 安装rclone
     && apt install rclone -y \
     # 创建目录和构造脚本
-    && mkdir -p /rec/biliup \
-    && mkdir -p /rec/录播姬 \
-    && mkdir -p /rec/脚本 \
     && mkdir -p /root/tmp \
     # 下载临时启动脚本
     && wget -O /root/tmp/init-components.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/容器构建脚本/init-components.sh \

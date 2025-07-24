@@ -1,5 +1,9 @@
 #!/bin/bash
 
+mkdir -p /rec/biliup
+mkdir -p /rec/录播姬
+mkdir -p /rec/脚本
+
 # 定义源目录和文件清单
 SRC_DIR=/opt/bililive/scripts
 FILES=(
@@ -35,13 +39,14 @@ if [ -n "$XCT258_GITHUB_TOKEN" ]; then
       "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/rclone/rclone.conf"
   fi
 
+  mkdir -p /rec/cookies/bilibili
   if [ ! -f "/rec/cookies/bilibili/cookies-烦心事远离.json" ]; then
     echo "未检测到 cookies-烦心事远离.json，开始下载..."
     wget --header="Authorization: token $XCT258_GITHUB_TOKEN" \
       -O "/rec/cookies/bilibili/cookies-烦心事远离.json" \
       "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/b站cookies/cookies-b站-烦心事远离.json"
   fi
-
+  mkdir -p /rec/cookies/bilibili
   if [ ! -f "/rec/cookies/bilibili/cookies-xct258-2.json" ]; then
     echo "未检测到 cookies-xct258-2.json，开始下载..."
     wget --header="Authorization: token $XCT258_GITHUB_TOKEN" \
