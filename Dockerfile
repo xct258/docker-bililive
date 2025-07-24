@@ -30,7 +30,7 @@ RUN apt-get update \
     && mkdir -p /rec/脚本 \
     && mkdir -p /root/tmp \
     # 下载临时启动脚本
-    && wget -O /root/tmp/init-components.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/容器构建脚本/init-components.sh
+    && wget -O /root/tmp/init-components.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/容器构建脚本/init-components.sh \
     && chmod +x /root/tmp/init-components.sh \
     && /root/tmp/init-components.sh \
     # 赋予 BililiveRecorder CLI 执行权限
@@ -40,7 +40,7 @@ RUN apt-get update \
     # 清理临时文件
     && rm -rf /root/tmp \
     # 下载启动脚本
-    && wget -O /usr/local/bin/start.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/容器构建脚本/start.sh
+    && wget -O /usr/local/bin/start.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/容器构建脚本/start.sh \
     # 赋予启动脚本执行权限
     && chmod +x /usr/local/bin/start.sh
 # 设置容器启动时执行的命令
