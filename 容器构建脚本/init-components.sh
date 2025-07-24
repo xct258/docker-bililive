@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mkdir -p /opt/bililive/scripts /opt/bililive/config /opt/bililive/apps /root/BililiveRecorder
+
 # 获取 7z 下载链接
 latest_release_7z=$(curl -s https://api.github.com/repos/ip7z/7zip/releases/latest)
 latest_7z_x64_url=$(echo "$latest_release_7z" | jq -r '.assets[] | select(.name | test("linux-x64.tar.xz")) | .browser_download_url')
@@ -32,11 +34,9 @@ biliup_file=$(find /root/tmp -type f -name "biliup")
 mv "$biliup_file" /opt/bililive/apps/biliup-rs
 mv /root/tmp/DanmakuFactory /opt/bililive/apps/DanmakuFactory
 
-mkdir -p /root/BililiveRecorder
 7zz x /root/tmp/BililiveRecorder-CLI.zip -o/root/BililiveRecorder
 
 # 下载视频处理相关脚本
-mkdir -p /opt/bililive/scripts /opt/bililive/config /opt/bililive/apps
 wget -O /opt/bililive/config/上传备份脚本配置文件.conf https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/上传备份脚本配置文件.conf
 wget -O /opt/bililive/scripts/录播上传备份脚本.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/录播上传备份脚本.sh
 wget -O /opt/bililive/scripts/压制视频.py https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/压制视频.py
