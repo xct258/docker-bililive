@@ -406,24 +406,29 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     # 计算6小时后的时间戳
     #delay_time_biliup_rs=$((current_time_biliup_rs + 6 * 3600))
     #$source_backup/biliup-rs -u $source_backup/cookies.json upload --copyright 2 --source https://live.bilibili.com/1962720 --tid 17 --title "$upload_title_1" --desc "$upload_desc_1" --tag "搞笑,直播回放,奶茶猪,高机动持盾军官,括弧笑,娱乐主播" --dtime ${delay_time_biliup_rs} "${compressed_files[@]}"
-    log info "开始上传视频：${compressed_files[@]}"
-    # 正常发布
-    # 执行投稿
-    biliup_upload_output=$("$source_backup/apps/biliup-rs" -u "${biliuprs_up_cookies}" upload \
-      --copyright 2 \
-      --cover "$biliup_cover_image" \
-      --source https://live.bilibili.com/1962720 \
-      --tid 17 \
-      --title "$upload_title_1" \
-      --desc "$upload_desc_1" \
-      --tag "搞笑,直播回放,奶茶猪,高机动持盾军官,括弧笑,娱乐主播" \
-    "${compressed_files[@]}")
-
-    # 检查是否包含“投稿成功”关键字
-    if echo "$biliup_upload_output" | grep -q "投稿成功"; then
-      log info "投稿成功"
+    
+    if [[ "$ENABLE_UPLOAD" != "true" ]]; then
+      log warn "上传已被禁用，跳过投稿步骤"
     else
-      log error "投稿失败，请检查"
+      log info "开始上传视频：${compressed_files[@]}"
+      # 正常发布
+      # 执行投稿
+      biliup_upload_output=$("$source_backup/apps/biliup-rs" -u "${biliuprs_up_cookies}" upload \
+        --copyright 2 \
+        --cover "$biliup_cover_image" \
+        --source https://live.bilibili.com/1962720 \
+        --tid 17 \
+        --title "$upload_title_1" \
+        --desc "$upload_desc_1" \
+        --tag "搞笑,直播回放,奶茶猪,高机动持盾军官,括弧笑,娱乐主播" \
+      "${compressed_files[@]}")
+
+      # 检查是否包含“投稿成功”关键字
+      if echo "$biliup_upload_output" | grep -q "投稿成功"; then
+        log info "投稿成功"
+      else
+        log error "投稿失败，请检查"
+      fi
     fi
     danmu_version_backup_dir="${source_backup}/压制版视频文件备份"
 
