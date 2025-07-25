@@ -481,6 +481,6 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     --data-urlencode "description=直播录制" \
     --data-urlencode "channel=一般通知" \
     --data-urlencode "content=$message" \
-  >/dev/null \
+  >/dev/null
 done
 log info "脚本执行完毕"
