@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 # 设置工作目录和备份文件件路径
 source_backup="/rec"
 
@@ -86,6 +88,7 @@ ${start_time}场
 }
 
 # 引入日志函数库
+export LOG_BASE_DIR="/rec/logs"
 source "/rec/脚本/log.sh"
 
 log info "脚本开始执行"

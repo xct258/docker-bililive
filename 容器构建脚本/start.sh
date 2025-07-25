@@ -150,7 +150,7 @@ while true; do
     time_difference=$(( time_difference + 86400 ))  # 加一天
   fi
 
-  echo "[$(date)] 睡眠 $time_difference 秒，等待下次执行时间 $target_time" >> /rec/录播上传备份脚本.log 2>&1
+  echo "睡眠 $time_difference 秒，等待下次执行时间 $target_time" >> /rec/录播上传备份脚本.log 2>&1
   sleep $time_difference
 done
 EOF

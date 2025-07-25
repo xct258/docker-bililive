@@ -11,8 +11,8 @@ readonly _LOG_LOADED=1
 _log_max_files=5
 # 设置最大保留日志文件数为5，超过的旧日志将被删除
 
-# 默认日志目录（当前脚本路径下 logs）
-_log_base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/logs"
+# 默认日志目录：支持外部通过 LOG_BASE_DIR 环境变量指定
+_log_base_dir="${LOG_BASE_DIR:-$(cd "$(dirname "${BASH_SOURCE[2]:-${BASH_SOURCE[1]}}")" && pwd)/logs}"
 # 获取当前脚本所在目录，拼接 logs 文件夹路径，作为日志存储根目录
 
 # 作用域限制变量
