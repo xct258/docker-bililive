@@ -116,22 +116,41 @@ SCHEDULER_SCRIPT="/usr/local/bin/执行视频备份脚本.sh"
 
 cat << 'EOF' > "$SCHEDULER_SCRIPT"
 #!/bin/bash
-schedule_sleep_time="02:00"
-while true; do
-  echo "$(date)" > /rec/录播上传备份脚本.log 2>&1
-  echo "----------------------------" >> /rec/录播上传备份脚本.log 2>&1
-  /rec/脚本/录播上传备份脚本.sh >> /rec/录播上传备份脚本.log 2>&1
-  echo "----------------------------" >> /rec/录播上传备份脚本.log 2>&1
-  echo "$(date)" >> /rec/录播上传备份脚本.log 2>&1
 
+CONFIG_FILE="/rec/上传备份脚本配置文件.conf"
+DEFAULT_SLEEP_TIME="02:00"
+
+while true; do
+  # 读取配置文件
+  if [[ -f "$CONFIG_FILE" ]]; then
+    source "$CONFIG_FILE"
+  else
+    echo "[$(date)] 配置文件不存在，使用默认设置" >> /rec/录播上传备份脚本.log 2>&1
+    ENABLE_UPLOAD=false
+    SCHEDULE_SLEEP_TIME="$DEFAULT_SLEEP_TIME"
+  fi
+
+  # 如果未启用，则跳过执行
+  if [[ "$ENABLE_UPLOAD" != "true" ]]; then
+    echo "[$(date)] 已禁用上传脚本执行，跳过本次任务。" >> /rec/录播上传备份脚本.log 2>&1
+  else
+    echo "$(date)" > /rec/录播上传备份脚本.log 2>&1
+    echo "----------------------------" >> /rec/录播上传备份脚本.log 2>&1
+    /rec/脚本/录播上传备份脚本.sh >> /rec/录播上传备份脚本.log 2>&1
+    echo "----------------------------" >> /rec/录播上传备份脚本.log 2>&1
+    echo "$(date)" >> /rec/录播上传备份脚本.log 2>&1
+  fi
+
+  # 计算下次执行时间
   current_date=$(date +%Y-%m-%d)
-  target_time="${current_date} ${schedule_sleep_time}"
+  target_time="${current_date} ${SCHEDULE_SLEEP_TIME:-$DEFAULT_SLEEP_TIME}"
   time_difference=$(( $(date -d "$target_time" +%s) - $(date +%s) ))
 
   if [[ $time_difference -lt 0 ]]; then
-    time_difference=$(( time_difference + 86400 ))
+    time_difference=$(( time_difference + 86400 ))  # 加一天
   fi
 
+  echo "[$(date)] 睡眠 $time_difference 秒，等待下次执行时间 $target_time" >> /rec/录播上传备份脚本.log 2>&1
   sleep $time_difference
 done
 EOF

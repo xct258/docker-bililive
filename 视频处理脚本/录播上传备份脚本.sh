@@ -69,14 +69,14 @@ handle_upload_status() {
   local start_time="$3"
 
   if $upload_success; then
-    echo "${$server_name}
+    echo "${server_name}
 
 ${streamer_name}
 ${start_time}场
 
 视频上传成功"
   else
-    echo "${$server_name}
+    echo "${server_name}
 
 ${streamer_name}
 ${start_time}场
@@ -264,7 +264,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     fi
 
     # 上传到B站
-    if [[ ! -f "$source_backup/biliup-rs" ]]; then
+    if [[ ! -f "$source_backup/apps/biliup-rs" ]]; then
       log info "检测到未下载 biliup-rs，开始下载..."
       latest_release_biliup_rs=$(curl -s https://api.github.com/repos/biliup/biliup-rs/releases/latest)
       latest_biliup_rs_x64_url=$(echo "$latest_release_biliup_rs" | jq -r ".assets[] | select(.name | test(\"x86_64-linux.tar.xz\")) | .browser_download_url")
@@ -272,14 +272,14 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
 
       arch=$(uname -m | grep -i -E "x86_64|aarch64")
       if [[ $arch == *"x86_64"* ]]; then
-        if wget -O $source_backup/biliup-rs.tar.xz "$latest_biliup_rs_x64_url"; then
+        if wget -O $source_backup/apps/biliup-rs.tar.xz "$latest_biliup_rs_x64_url"; then
           log success "biliup-rs x86_64 版本下载成功"
         else
           log error "biliup-rs x86_64 版本下载失败"
           upload_success=false
         fi
       elif [[ $arch == *"aarch64"* ]]; then
-        if wget -O $source_backup/biliup-rs.tar.xz "$latest_biliup_rs_arm64_url"; then
+        if wget -O $source_backup/apps/biliup-rs.tar.xz "$latest_biliup_rs_arm64_url"; then
           log success "biliup-rs aarch64 版本下载成功"
         else
           log error "biliup-rs aarch64 版本下载失败"
@@ -290,18 +290,18 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
         upload_success=false
       fi
 
-      mkdir $source_backup/biliup-rs-tmp
-      if tar -xf $source_backup/biliup-rs.tar.xz -C $source_backup/biliup-rs-tmp; then
+      mkdir $source_backup/apps/biliup-rs-tmp
+      if tar -xf $source_backup/apps/biliup-rs.tar.xz -C $source_backup/biliup-rs-tmp; then
         log success "biliup-rs 解压成功"
       else
         log error "biliup-rs 解压失败"
         upload_success=false
       fi
-      rm -rf $source_backup/biliup-rs.tar.xz
-      biliup_file=$(find $source_backup/biliup-rs-tmp -type f -name "biliup")
-      mv $biliup_file $source_backup/biliup-rs
-      rm -rf $source_backup/biliup-rs-tmp
-      chmod +x $source_backup/biliup-rs
+      rm -rf $source_backup/apps/biliup-rs.tar.xz
+      biliup_file=$(find $source_backup/apps/biliup-rs-tmp -type f -name "biliup")
+      mv $biliup_file $source_backup/apps/biliup-rs
+      rm -rf $source_backup/apps/biliup-rs-tmp
+      chmod +x $source_backup/apps/biliup-rs
     fi
   fi
 
@@ -328,8 +328,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
               #biliup_cover_image=$(python3 /rec/脚本/封面获取.py "$backup_dir")
               #log debug "获取封面图片路径：$biliup_cover_image"
 
-              chmod +x /DanmakuFactory
-              if /DanmakuFactory -i "${backup_dir}/${xml_file}" -o "${backup_dir}/${ass_file}" -S 50 -O 230 --ignore-warnings > /dev/null; then
+              if /rec/apps/DanmakuFactory -i "${backup_dir}/${xml_file}" -o "${backup_dir}/${ass_file}" -S 50 -O 230 --ignore-warnings > /dev/null; then
                 log success "DanmakuFactory 弹幕 ASS 文件生成成功"
               else
                 log error "DanmakuFactory 弹幕 ASS 文件生成失败"
@@ -360,16 +359,24 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
                   fi
                 fi
               done
-
-              if python3 /rec/脚本/压制视频.py "${backup_dir}/${xml_file}"; then
-                log success "视频弹幕压制完成：$output_file"
-                compressed_files+=("${backup_dir}/${output_file}")
+              if [[ "$enable_danmaku_overlay" != "true" ]]; then
+                log warn "已禁用高能进度条叠加，跳过视频压制"
+                compressed_files+=("${backup_dir}/${filename}")  # 直接添加原视频路径
               else
-                log error "视频弹幕压制失败：$output_file"
-                compressed_files+=("${backup_dir}/${filename}")
+                if python3 /rec/脚本/压制视频.py "${backup_dir}/${xml_file}"; then
+                  if [[ -f "${backup_dir}/${output_file}" ]]; then
+                    log success "视频弹幕压制完成：$output_file"
+                    compressed_files+=("${backup_dir}/${output_file}")
+                  else
+                    log error "压制脚本执行成功但未生成目标文件，使用原视频：$filename"
+                    compressed_files+=("${backup_dir}/${filename}")
+                  fi
+                else
+                  log error "视频弹幕压制失败：$output_file"
+                  compressed_files+=("${backup_dir}/${filename}")
+                fi
+                original_files+=("${backup_dir}/${filename}")
               fi
-              original_files+=("${backup_dir}/${filename}")
-
             else
               log warn "弹幕文件内容为空或不符合预期，跳过弹幕压制：${backup_dir}/${xml_file}"
             fi
@@ -402,7 +409,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     log info "开始上传视频：${compressed_files[@]}"
     # 正常发布
     # 执行投稿
-    biliup_upload_output=$("$source_backup/biliup-rs" -u "${biliup-rs_up_cookies}" upload \
+    biliup_upload_output=$("$source_backup/apps/biliup-rs" -u "${biliuprs_up_cookies}" upload \
       --copyright 2 \
       --cover "$biliup_cover_image" \
       --source https://live.bilibili.com/1962720 \
@@ -439,24 +446,25 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
       log info "未找到压制版文件，跳过备份步骤"
     fi
   fi
-  # 备份到rclone脚本
-  if [[ "$streamer_name" == "括弧笑bilibili" ]]; then
-    # rclone 网盘路径
-    rclone_backup_path="$rclone_onedrive_config:/直播录制/括弧笑/"
+  # 上传rclone
+  if [[ "$ENABLE_RCLONE_UPLOAD" != "true" ]]; then
+    log info "已禁用 rclone 网盘备份，跳过上传"
   else
-    # rclone 网盘路径
-    rclone_backup_path="$rclone_onedrive_config:/直播录制/${streamer_name}/"
-  fi   
-  #log warn "rclone 网盘备份关闭"
-  if rclone move "$backup_dir" "${rclone_backup_path}${formatted_start_time_3}/bilibili/$recording_platform/"; then
-    # rclone 成功执行
-    if [ -z "$(ls -A "$backup_dir")" ]; then
-      log info "rclone 网盘备份成功，删除本地文件夹"
-      rmdir "$backup_dir"
+    if [[ "$streamer_name" == "括弧笑bilibili" ]]; then
+      rclone_backup_path="$rclone_onedrive_config:/直播录制/括弧笑/"
+    else
+      rclone_backup_path="$rclone_onedrive_config:/直播录制/${streamer_name}/"
     fi
-  else
-    upload_success=false
-    log warn "rclone 网盘备份失败，请检查"
+
+    if rclone move "$backup_dir" "${rclone_backup_path}${formatted_start_time_3}/bilibili/$recording_platform/"; then
+      if [ -z "$(ls -A "$backup_dir")" ]; then
+        log info "rclone 网盘备份成功，删除本地文件夹"
+        rmdir "$backup_dir"
+      fi
+    else
+      upload_success=false
+      log warn "rclone 网盘备份失败，请检查"
+    fi
   fi
 
   # 发送上传结果消息
@@ -464,7 +472,10 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
   
   # 推送消息命令
   curl -s -X POST "https://msgpusher.xct258.top/push/root" \
-    -d "title=直播录制&description=直播录制&channel=一般通知&content=$message" \
-  >/dev/null
+    --data-urlencode "title=直播录制" \
+    --data-urlencode "description=直播录制" \
+    --data-urlencode "channel=一般通知" \
+    --data-urlencode "content=$message" \
+  >/dev/null \
 done
 log info "脚本执行完毕"
