@@ -30,29 +30,45 @@ done
 
 # 下载私有配置文件（需 GitHub Token）
 if [ -n "$XCT258_GITHUB_TOKEN" ]; then
-  echo "检测到 XCT258_GITHUB_TOKEN，准备检查并下载私有配置文件..."
 
-  mkdir -p /root/.config/rclone
-  if [ ! -f "/root/.config/rclone/rclone.conf" ]; then
-    echo "未检测到 rclone.conf，开始下载..."
-    wget --header="Authorization: token $XCT258_GITHUB_TOKEN" \
-      -O "/root/.config/rclone/rclone.conf" \
-      "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/rclone/rclone.conf"
-  fi
+  # 检查是否有文件缺失，只有缺失时才下载
+  missing_file=false
 
-  mkdir -p /rec/cookies/bilibili
-  if [ ! -f "/rec/cookies/bilibili/cookies-烦心事远离.json" ]; then
-    echo "未检测到 cookies-烦心事远离.json，开始下载..."
-    wget --header="Authorization: token $XCT258_GITHUB_TOKEN" \
-      -O "/rec/cookies/bilibili/cookies-烦心事远离.json" \
-      "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/b站cookies/cookies-b站-烦心事远离.json"
-  fi
-  mkdir -p /rec/cookies/bilibili
-  if [ ! -f "/rec/cookies/bilibili/cookies-xct258-2.json" ]; then
-    echo "未检测到 cookies-xct258-2.json，开始下载..."
-    wget --header="Authorization: token $XCT258_GITHUB_TOKEN" \
-      -O "/rec/cookies/bilibili/cookies-xct258-2.json" \
-      "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/b站cookies/cookies-b站-xct258-2.json"
+  [ ! -f "/root/.config/rclone/rclone.conf" ] && missing_file=true
+  [ ! -f "/rec/cookies/bilibili/cookies-烦心事远离.json" ] && missing_file=true
+  [ ! -f "/rec/cookies/bilibili/cookies-xct258-2.json" ] && missing_file=true
+
+  if $missing_file; then
+    echo "检测到 XCT258_GITHUB_TOKEN，正在静默下载私有配置文件..."
+
+    mkdir -p /root/.config/rclone
+    mkdir -p /rec/cookies/bilibili
+
+    download_all_success=true
+
+    if [ ! -f "/root/.config/rclone/rclone.conf" ]; then
+      wget --quiet --header="Authorization: token $XCT258_GITHUB_TOKEN" \
+        -O "/root/.config/rclone/rclone.conf" \
+        "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/rclone/rclone.conf" || download_all_success=false
+    fi
+
+    if [ ! -f "/rec/cookies/bilibili/cookies-烦心事远离.json" ]; then
+      wget --quiet --header="Authorization: token $XCT258_GITHUB_TOKEN" \
+        -O "/rec/cookies/bilibili/cookies-烦心事远离.json" \
+        "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/b站cookies/cookies-b站-烦心事远离.json" || download_all_success=false
+    fi
+
+    if [ ! -f "/rec/cookies/bilibili/cookies-xct258-2.json" ]; then
+      wget --quiet --header="Authorization: token $XCT258_GITHUB_TOKEN" \
+        -O "/rec/cookies/bilibili/cookies-xct258-2.json" \
+        "https://raw.githubusercontent.com/xct258/Documentation/refs/heads/main/b站cookies/cookies-b站-xct258-2.json" || download_all_success=false
+    fi
+
+    if $download_all_success; then
+      echo "✅ 私有配置文件全部已下载完成。"
+    else
+      echo "⚠️ 私有配置文件部分下载失败，请检查 GitHub Token 或网络连接。"
+    fi
   fi
 fi
 
