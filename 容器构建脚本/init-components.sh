@@ -43,3 +43,4 @@ wget -O /opt/bililive/scripts/压制视频.py https://raw.githubusercontent.com/
 wget -O /opt/bililive/scripts/封面获取.py https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/封面获取.py
 wget -O /opt/bililive/scripts/biliup后处理.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/biliup/biliup后处理.sh
 wget -O /opt/bililive/scripts/log.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/log.sh
+chmod +x /opt/bililive/scripts/*.sh
