@@ -362,7 +362,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
                   fi
                 fi
               done
-              if [[ "$enable_danmaku_overlay" != "true" ]]; then
+              if [[ "$ENABLE_DANMAKU_OVERLAY" != "true" ]]; then
                 log warn "已禁用高能进度条叠加，跳过视频压制"
                 compressed_files+=("${backup_dir}/${filename}")  # 直接添加原视频路径
               else
