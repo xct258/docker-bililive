@@ -142,12 +142,12 @@ while true; do
     source "$CONFIG_FILE"
   else
     echo "配置文件不存在，使用默认设置" >> /rec/录播上传备份脚本.log 2>&1
-    ENABLE_UPLOAD=false
+    ENABLE_UPLOAD_SCRIPT=false
     SCHEDULE_SLEEP_TIME="$DEFAULT_SLEEP_TIME"
   fi
 
   # 如果未启用，则跳过执行
-  if [[ "$ENABLE_UPLOAD" != "true" ]]; then
+  if [[ "$ENABLE_UPLOAD_SCRIPT" != "true" ]]; then
     echo "$(date)" > /rec/录播上传备份脚本.log 2>&1
     echo "----------------------------" >> /rec/录播上传备份脚本.log 2>&1
     echo "已禁用上传脚本执行，跳过本次任务。" >> /rec/录播上传备份脚本.log 2>&1

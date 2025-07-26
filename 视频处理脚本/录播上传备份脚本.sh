@@ -410,7 +410,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     #delay_time_biliup_rs=$((current_time_biliup_rs + 6 * 3600))
     #$source_backup/biliup-rs -u $source_backup/cookies.json upload --copyright 2 --source https://live.bilibili.com/1962720 --tid 17 --title "$upload_title_1" --desc "$upload_desc_1" --tag "搞笑,直播回放,奶茶猪,高机动持盾军官,括弧笑,娱乐主播" --dtime ${delay_time_biliup_rs} "${compressed_files[@]}"
     
-    if [[ "$ENABLE_UPLOAD" != "true" ]]; then
+    if [[ "$ENABLE_VIDEO_UPLOAD" != "true" ]]; then
       log warn "上传已被禁用，跳过投稿步骤"
     else
       log info "开始上传视频：${compressed_files[@]}"
