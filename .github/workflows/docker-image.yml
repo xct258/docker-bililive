@@ -1,4 +1,4 @@
-name: Docker  # 工作流名称，将显示在 GitHub Actions UI 中
+name: debian-bililive-docker  # 工作流名称，将显示在 GitHub Actions UI 中
 
 on:
   # 定时触发：每月1日的 00:00 UTC 自动运行一次（可用于自动构建/发布）
