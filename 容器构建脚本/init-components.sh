@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mkdir -p /opt/bililive/scripts /opt/bililive/config /opt/bililive/apps /root/BililiveRecorder
+mkdir -p /opt/bililive/scripts /opt/bililive/config /opt/bililive/apps /root/BililiveRecorder /opt/bililive/biliup
 
 # 获取 7z 下载链接
 latest_release_7z=$(curl -s https://api.github.com/repos/ip7z/7zip/releases/latest)
@@ -41,6 +41,6 @@ wget -O /opt/bililive/config/上传备份脚本配置文件.conf https://raw.git
 wget -O /opt/bililive/scripts/录播上传备份脚本.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/录播上传备份脚本.sh
 wget -O /opt/bililive/scripts/压制视频.py https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/压制视频.py
 wget -O /opt/bililive/scripts/封面获取.py https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/封面获取.py
-wget -O /opt/bililive/scripts/biliup后处理.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/biliup/biliup后处理.sh
+wget -O /opt/bililive/biliup/biliup后处理.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/biliup/biliup后处理.sh
 wget -O /opt/bililive/scripts/log.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/log.sh
 chmod +x /opt/bililive/scripts/*.sh

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mkdir -p /rec/biliup
+mkdir -p /rec/biliup/脚本
 mkdir -p /rec/录播姬
 mkdir -p /rec/脚本
 mkdir -p /rec/apps
@@ -9,6 +9,15 @@ mkdir -p /rec/apps
 if [ ! -f /rec/上传备份脚本配置文件.conf ]; then
     cp /opt/bililive/config/上传备份脚本配置文件.conf /rec/
 fi
+
+# 复制 /opt/bililive/biliup 到 /rec/biliup/脚本
+for file in /opt/bililive/biliup/*; do
+    filename=$(basename "$file")
+    target="/rec/biliup/脚本/$filename"
+    if [ -f "$file" ] && [ ! -f "$target" ]; then
+        cp "$file" "$target"
+    fi
+done
 
 # 复制 /opt/bililive/scripts 到 /rec/脚本
 for file in /opt/bililive/scripts/*; do
