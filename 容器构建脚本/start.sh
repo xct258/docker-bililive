@@ -172,14 +172,14 @@ while true; do
 
   # 计算下次执行时间
   current_date=$(date +%Y-%m-%d)
+  now_ts=$(date +%s)
   target_time="${current_date} ${SCHEDULE_SLEEP_TIME:-$DEFAULT_SLEEP_TIME}"
-  time_difference=$(( $(date -d "$target_time" +%s) - $(date +%s) ))
-
+  time_difference=$(( $(date -d "$target_time" +%s) - $now_ts ))
   if [[ $time_difference -lt 0 ]]; then
     time_difference=$(( time_difference + 86400 ))  # 加一天
   fi
-
-  echo "睡眠 $time_difference 秒，等待下次执行时间 $target_time" >> /rec/录播上传备份脚本.log 2>&1
+  wake_time=$(date -d "@$(( $now_ts + $time_difference ))" '+%Y-%m-%d %H:%M:%S')
+  echo "睡眠 $time_difference 秒，预计下次执行时间 $wake_time" >> /rec/录播上传备份脚本.log 2>&1
   sleep $time_difference
 done
 EOF
