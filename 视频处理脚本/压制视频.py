@@ -61,19 +61,29 @@ def smooth_bullet_density(time_bins, bullet_density, window_size=5):
 
 # 绘制弹幕密度图
 def plot_bullet_density(time_fine, bullet_density_fine, current_time, max_time, frame_index, folder_name):
-    plt.figure(figsize=(1920 / 100, 1080 / 100))  # 设置图形的大小
-    offset = 150  # 设置y轴偏移量，用于给图像留出空间
-    plt.plot(time_fine[time_fine <= current_time], bullet_density_fine[time_fine <= current_time], color='green', label='Played')
-    plt.plot(time_fine[time_fine > current_time], bullet_density_fine[time_fine > current_time], color='gray', label='Unplayed')
-    
+    plt.figure(figsize=(1920 / 100, 1080 / 100))  # 1920x1080 图像大小
+
+    # 获取数据范围
+    min_val = min(bullet_density_fine)
+    max_val = max(bullet_density_fine)
+    line_range = max_val - min_val
+
+    # 控制线条“在底下但不贴底”
+    visual_top_margin = line_range * 40.0
+    visual_bottom_margin = line_range * 0.2
+    plt.ylim(min_val - visual_bottom_margin, max_val + visual_top_margin)
+
+    # 绘图
+    plt.plot(time_fine[time_fine <= current_time], bullet_density_fine[time_fine <= current_time], color='green')
+    plt.plot(time_fine[time_fine > current_time], bullet_density_fine[time_fine > current_time], color='gray')
+
     plt.xlim(0, max_time)
-    plt.ylim(0, max(bullet_density_fine) + offset)
-    plt.axis('off')  # 关闭坐标轴
-    plt.grid(False)  # 关闭网格
-    
-    # 保存图像到指定文件夹
+    plt.axis('off')
+    plt.grid(False)
+
+    # 保存图像
     plt.savefig(f'{folder_name}/frame_{frame_index}.png', bbox_inches='tight', pad_inches=0, transparent=True, dpi=100)
-    plt.close()  # 关闭当前图像
+    plt.close()
 
 # 生成视频帧（每10秒生成一张）
 def generate_frames(video_duration, bullet_density_fine, time_fine, frame_interval=10, folder_name='frames'):
