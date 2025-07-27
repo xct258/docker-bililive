@@ -330,13 +330,6 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
               #biliup_cover_image=$(python3 /rec/脚本/封面获取.py "$backup_dir")
               #log debug "获取封面图片路径：$biliup_cover_image"
 
-              if /rec/apps/DanmakuFactory -i "${backup_dir}/${xml_file}" -o "${backup_dir}/${ass_file}" -S 50 -O 230 --ignore-warnings > /dev/null; then
-                log success "DanmakuFactory 弹幕 ASS 文件生成成功"
-              else
-                log error "DanmakuFactory 弹幕 ASS 文件生成失败"
-                upload_success=false
-              fi
-
               # 检查 Intel 显卡驱动安装
               if lspci | grep -i "VGA\|Display" | grep -i "Intel Corporation" > /dev/null; then
                 if ! vainfo > /dev/null 2>&1; then
@@ -365,6 +358,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
                 log warn "已禁用高能进度条叠加，跳过视频压制"
                 compressed_files+=("${backup_dir}/${filename}")  # 直接添加原视频路径
               else
+                /rec/apps/DanmakuFactory -i "${backup_dir}/${xml_file}" -o "${backup_dir}/${ass_file}" -S 50 -O 230 --ignore-warnings > /dev/null
                 if python3 /rec/脚本/压制视频.py "${backup_dir}/${xml_file}"; then
                   if [[ -f "${backup_dir}/${output_file}" ]]; then
                     log success "视频弹幕压制完成：$output_file"
@@ -377,6 +371,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
                   log error "视频弹幕压制失败：$output_file"
                   compressed_files+=("${backup_dir}/${filename}")
                 fi
+                rm "${backup_dir}/${ass_file}"
                 original_files+=("${backup_dir}/${filename}")
               fi
             else
