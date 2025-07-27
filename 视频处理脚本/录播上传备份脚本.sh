@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -x
 
 # 设置工作目录和备份文件件路径
@@ -412,6 +411,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     
     if [[ "$ENABLE_VIDEO_UPLOAD" != "true" ]]; then
       log warn "上传已被禁用，跳过投稿步骤"
+      danmu_version_backup_dir="${source_backup}/压制版视频文件备份_禁用投稿_${start_time}"
     else
       log info "开始上传视频：${compressed_files[@]}"
       # 正常发布
@@ -429,11 +429,12 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
       # 检查是否包含“投稿成功”关键字
       if echo "$biliup_upload_output" | grep -q "投稿成功"; then
         log info "投稿成功"
+        danmu_version_backup_dir="${source_backup}/压制版视频文件备份"
       else
         log error "投稿失败，请检查"
+        danmu_version_backup_dir="${source_backup}/压制版视频文件备份_投稿失败_${start_time}"
       fi
     fi
-    danmu_version_backup_dir="${source_backup}/压制版视频文件备份"
 
     # 查找压制弹幕版文件
     if ls "${backup_dir}/压制版-"* 1> /dev/null 2>&1; then
