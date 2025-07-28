@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 # 引入日志脚本
 source /root/apps/脚本/上传往期视频回放/log.sh
 
@@ -7,7 +7,7 @@ log info "上传任务开始"
 
 # === 基本路径 ===
 WORK_DIR="/root/apps/脚本/上传往期视频回放"
-RCLONE_REMOTE="onedrive-video-7:直播录制/括弧笑/2023/01"
+RCLONE_REMOTE="onedrive-video-7:直播录制/括弧笑/2023/02"
 DST_DIR="$WORK_DIR/video"
 CACHE_DIR="$WORK_DIR/cache"
 COVER_DIR="$WORK_DIR/covers"
@@ -65,7 +65,7 @@ log info "开始列出远程目录"
 mapfile -t subdirs < <(
     rclone lsd "$RCLONE_REMOTE" --max-depth 1 2>/dev/null | awk '{print $NF}' |
     sort | while read -r line; do
-        if ! grep -q "目录名: $line" "$UPLOAD_LOG"; then
+        if ! grep -q "回放时间: $line" "$UPLOAD_LOG"; then
             echo "$line"
         else
             log debug "目录已上传过，跳过：$line"
@@ -92,7 +92,10 @@ for dirname in "${subdirs[@]}"; do
     fi
     log info "rclone 复制完成：$dirname"
 
-    mapfile -t video_files < <(find "$local_dst_dir" -type f \( -iname "*.mp4" -o -iname "*.flv" \))
+    mapfile -t video_files < <(
+        find "$local_dst_dir" -type f \( -iname "*.mp4" -o -iname "*.flv" \) | sort
+    )
+
     log info "在目录 $dirname 中找到视频文件数量：${#video_files[@]}"
 
     if [[ ${#video_files[@]} -gt 0 ]]; then
