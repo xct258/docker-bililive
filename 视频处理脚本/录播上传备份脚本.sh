@@ -21,7 +21,7 @@ generate_upload_desc() {
   local formatted_start_time_2="$2"
 
   echo "直播间标题：$stream_title
-开播时间：$formatted_start_time_2
+录制时间：$formatted_start_time_2
 录制平台：$recording_platform
 偶尔通知的直播通知Q群：971923797
 
