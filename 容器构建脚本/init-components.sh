@@ -32,6 +32,7 @@ chmod +x /root/tmp/7zz
 mv /root/tmp/7zz /bin/7zz
 biliup_file=$(find /root/tmp -type f -name "biliup")
 mv "$biliup_file" /opt/bililive/apps/biliup-rs
+chmod +x /root/tmp/DanmakuFactory
 mv /root/tmp/DanmakuFactory /opt/bililive/apps/DanmakuFactory
 
 7zz x /root/tmp/BililiveRecorder-CLI.zip -o/root/BililiveRecorder
