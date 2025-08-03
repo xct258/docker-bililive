@@ -118,8 +118,8 @@ def overlay_videos(original_video, overlay_video, output_file, ass_file):
         '-map', '[v]',
         '-map', '0:a',
         '-c:v', 'h264_qsv',
-        '-b:v', '10M',
-        '-preset', 'faster',
+        '-b:v', '12M',
+        '-preset', 'medium',
         '-c:a', 'copy',
         '-y', output_file
     ]

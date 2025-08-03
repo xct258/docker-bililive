@@ -363,6 +363,9 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
                   log warn "已禁用高能进度条叠加，跳过视频压制"
                   compressed_files+=("${backup_dir}/${filename}")  # 直接添加原视频路径
                 else
+                  if [ "$recording_platform" = "biliup" ]; then
+                    python3 /rec/脚本/biliup平台xml弹幕文件处理.py "${backup_dir}/${xml_file}"
+                  fi
                   /rec/apps/DanmakuFactory -i "${backup_dir}/${xml_file}" -o "${backup_dir}/${ass_file}" -S 50 -O "${DanmakuFactory_opacity:-'200'}" --ignore-warnings > /dev/null
                   if python3 /rec/脚本/压制视频.py "${backup_dir}/${xml_file}"; then
                     if [[ -f "${backup_dir}/${output_file}" ]]; then
@@ -399,7 +402,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
 
   if [[ "$streamer_name" == "括弧笑bilibili" && " ${update_servers[*]} " == *" $recording_platform "* ]]; then
     # 构建视频标题
-    upload_title_1="括弧笑${formatted_start_time_4}直播回放"
+    upload_title_1="${formatted_start_time_4}"
     # 构建视频简介
     upload_desc_1=$(generate_upload_desc "$stream_title" "$formatted_start_time_2")
 
@@ -424,7 +427,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
         --tid 17 \
         --title "$upload_title_1" \
         --desc "$upload_desc_1" \
-        --tag "搞笑,直播回放,奶茶猪,高机动持盾军官,括弧笑,娱乐主播" \
+        --tag "直播回放,奶茶猪,娱乐主播" \
       "${compressed_files[@]}")
 
       # 检查是否包含“投稿成功”关键字
