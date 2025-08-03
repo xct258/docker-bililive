@@ -1,0 +1,13 @@
+services:
+  debian-bililive:
+    container_name: debian-bililive
+    image: xct258/debian-bililive
+    network_mode: host
+    environment:
+      XCT258_GITHUB_TOKEN: ""      # github的token，用于下载配置文件
+      Bililive_USER: "xct258"      # 录播姬默认用户名
+      Bililive_PASS: "xct258"      # 录播姬默认随机密码
+      Biliup_PASS: "xct258"        # biliup默认密码，用户名固定为biliup
+    volumes:
+      - ./data:/rec
+    restart: always
