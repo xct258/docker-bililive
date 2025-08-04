@@ -24,11 +24,9 @@ def get_sc_time(price_yuan: int) -> int:
             return duration
     return 60
 
-def escape_double_hyphen(text: str) -> str:
-    # 持续替换，直到文本中不再有连续的两个减号
-    while '--' in text:
-        text = text.replace('--', '- -')
-    return text
+def safe_text(text: str) -> str:
+    """将回车符替换为 XML 实体"""
+    return text.replace('\r', '&#13;') if text else ''
 
 def main(xml_path):
     if not os.path.isfile(xml_path):
@@ -46,10 +44,9 @@ def main(xml_path):
     indent_unit = "  "
 
     for elem in root:
-        indent_unit = "  "
-
         if elem.tag != 's':
             line = ET.tostring(elem, encoding='unicode').strip()
+            line = line.replace('\r', '&#13;')
             modified_lines.append(f"{indent_unit}{line}")
             continue
 
@@ -78,7 +75,7 @@ def main(xml_path):
                 'price': str(price_yuan),
                 'time': str(time_seconds)
             })
-            new_elem.text = elem.text
+            new_elem.text = safe_text(elem.text)
         elif type_attr == 'gift' and giftname != '辣条':
             new_elem = ET.Element('gift', {
                 'ts': elem.get('timestamp'),
@@ -89,19 +86,18 @@ def main(xml_path):
             })
 
         if new_elem is not None:
-            original_str = ET.tostring(elem, encoding='unicode').strip()
-            safe_original_str = escape_double_hyphen(original_str)
-            comment_str = f"<!--{safe_original_str}-->"
             new_elem_str = ET.tostring(new_elem, encoding='unicode').strip()
-            modified_lines.append(f"{indent_unit}{comment_str}")
+            new_elem_str = new_elem_str.replace('\r', '&#13;')
             modified_lines.append(f"{indent_unit}{new_elem_str}")
         else:
-            line = ET.tostring(elem, encoding='unicode').strip()
-            modified_lines.append(f"{indent_unit}{line}")
+            # 保留非 gift/guard/sc 的 <s> 弹幕
+            original_str = ET.tostring(elem, encoding='unicode').strip()
+            original_str = original_str.replace('\r', '&#13;')
+            modified_lines.append(f"{indent_unit}{original_str}")
 
     # 备份原文件，格式 input_bak.xml
     base, ext = os.path.splitext(xml_path)
-    backup_path = f"{base}_bak{ext}"
+    backup_path = f"{base}_original{ext}"
     shutil.copy2(xml_path, backup_path)
 
     # 写回覆盖原文件
