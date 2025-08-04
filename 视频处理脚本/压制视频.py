@@ -93,7 +93,7 @@ def plot_bullet_density(time_fine, bullet_density_fine, current_time, max_time,
     line_range = max_val - min_val
 
     # 设置上下边距，让线条“不贴底”且有较大上方空间
-    visual_top_margin = line_range * 40.0
+    visual_top_margin = line_range * 20.0
     visual_bottom_margin = line_range * 0.2
     plt.ylim(min_val - visual_bottom_margin, max_val + visual_top_margin)
 
