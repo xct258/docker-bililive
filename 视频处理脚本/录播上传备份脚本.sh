@@ -164,7 +164,7 @@ for dir in "${directories[@]}"; do
   recording_platform=$(echo "$base_filename" | cut -d'_' -f 1 | sed 's/^压制版-//')
   # 示例：录播姬
 
-  backup_dir="${source_backup}/backup/${recording_platform}_${streamer_name}_${start_time}"
+  backup_dir="${source_backup}/backup/${recording_platform}/${recording_platform}_${streamer_name}_${start_time}"
   mkdir -p $backup_dir
   # 将备份目录添加到数组
   backup_dirs+=("$backup_dir")
