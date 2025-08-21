@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt  # 导入Matplotlib库，用于绘图
 import subprocess  # 导入subprocess模块，用于执行外部命令
 import os  # 导入os模块，用于文件和目录操作
 from scipy.interpolate import interp1d  # 导入插值函数，用于平滑数据
-from scipy.signal import gaussian, convolve  # 导入高斯滤波器和卷积函数
+from scipy.signal import convolve  # 导入高斯滤波器和卷积函数
+from scipy.signal.windows import gaussian  # 导入高斯滤波器和卷积函数
 import xml.etree.ElementTree as ET  # 导入ElementTree库，用于解析XML文件
 import shutil  # 导入shutil模块，用于文件和目录的高级操作
 import matplotlib.collections as mcoll  # 导入用于颜色分段线条绘制
