@@ -25,12 +25,6 @@ generate_upload_desc() {
 录制平台：$recording_platform
 偶尔通知的直播通知Q群：971923797
 
-原视频文件和往期视频文件：
-https://yourls.xct258.top/zbhf-khx
-或者
-https://openlist.xct258.top
-ps：这两是一样的，第二个链接可能会失效，第一个链接会一直使用
-
 括弧笑频道主页：
 bilibili
 顶级尼鸡塔结晶
@@ -164,7 +158,7 @@ for dir in "${directories[@]}"; do
   recording_platform=$(echo "$base_filename" | cut -d'_' -f 1 | sed 's/^压制版-//')
   # 示例：录播姬
 
-  backup_dir="${source_backup}/backup/${recording_platform}/${recording_platform}_${streamer_name}_${start_time}"
+  backup_dir="${source_backup}/backup/${recording_platform}/${streamer_name}/${start_time}"
   mkdir -p $backup_dir
   # 将备份目录添加到数组
   backup_dirs+=("$backup_dir")
