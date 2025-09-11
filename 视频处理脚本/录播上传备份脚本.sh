@@ -357,9 +357,6 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
                   log warn "已禁用高能进度条叠加，跳过视频压制"
                   compressed_files+=("${backup_dir}/${filename}")  # 直接添加原视频路径
                 else
-                  if [ "$recording_platform" = "biliup" ]; then
-                    python3 /rec/脚本/biliup平台xml弹幕文件处理.py "${backup_dir}/${xml_file}"
-                  fi
                   /rec/apps/DanmakuFactory -i "${backup_dir}/${xml_file}" -o "${backup_dir}/${ass_file}" -S 50 -O "${DanmakuFactory_opacity:-'200'}" --ignore-warnings > /dev/null
                   if python3 /rec/脚本/压制视频.py "${backup_dir}/${xml_file}"; then
                     if [[ -f "${backup_dir}/${output_file}" ]]; then

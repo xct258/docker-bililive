@@ -73,7 +73,7 @@ wget -O /opt/bililive/config/上传备份脚本配置文件.conf https://raw.git
 wget -O /opt/bililive/scripts/录播上传备份脚本.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/录播上传备份脚本.sh
 wget -O /opt/bililive/scripts/压制视频.py https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/压制视频.py
 wget -O /opt/bililive/scripts/封面获取.py https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/封面获取.py
-wget -O /opt/bililive/scripts/biliup平台xml弹幕文件处理.py https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/biliup平台xml弹幕文件处理.py
+wget -O /opt/bililive/scripts/ffmpeg删除指定片段.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/ffmpeg删除指定片段.sh
 wget -O /opt/bililive/biliup/biliup后处理.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/biliup/biliup后处理.sh
 wget -O /opt/bililive/scripts/log.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/log.sh
 chmod +x /opt/bililive/scripts/*.sh
