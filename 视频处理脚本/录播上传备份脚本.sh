@@ -61,6 +61,8 @@ handle_upload_status() {
   local upload_success="$1"
   local streamer_name="$2"
   local start_time="$3"
+  local remote_name="$4"
+  local free_gb="$5"
 
   if $upload_success; then
     echo "${server_name}
@@ -68,7 +70,11 @@ handle_upload_status() {
 ${streamer_name}
 ${start_time}场
 
-视频上传成功"
+视频上传成功
+备份网盘: 
+${remote_name}
+剩余空间: 
+${free_gb}GB"
   else
     echo "${server_name}
 
@@ -453,26 +459,36 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
   if [[ "$ENABLE_RCLONE_UPLOAD" != "true" ]]; then
     log info "已禁用 rclone 网盘备份，跳过上传"
   else
-    if [[ "$streamer_name" == "括弧笑bilibili" ]]; then
-      rclone_backup_path="$rclone_onedrive_config:/直播录制/括弧笑/"
-    else
-      rclone_backup_path="$rclone_onedrive_config:/直播录制/${streamer_name}/"
-    fi
+    # 调用获取最大剩余容量网盘的脚本（JSON 输出）
+    rclone_onedrive_max_remote_json=$("/rec/脚本/自动选择onedrive网盘.sh")
+    rclone_onedrive_config=$(echo "$rclone_onedrive_max_remote_json" | jq -r '.remote')
+    rclone_onedrive_free_gb=$(echo "$rclone_onedrive_max_remote_json" | jq -r '.free_gb')
 
-    if rclone move "$backup_dir" "${rclone_backup_path}${formatted_start_time_3}/bilibili/$recording_platform/"; then
-      if [ -z "$(ls -A "$backup_dir")" ]; then
-        log info "rclone 网盘备份成功，删除本地文件夹"
-        rmdir "$backup_dir"
-      fi
+    # 检查是否找到可用网盘
+    if [[ "$rclone_onedrive_config" == "null" || -z "$rclone_onedrive_config" ]]; then
+        log warn "未找到可用的 rclone 网盘，跳过上传"
+        upload_success=false
     else
-      upload_success=false
-      log warn "rclone 网盘备份失败，请检查"
+      if [[ "$streamer_name" == "括弧笑bilibili" ]]; then
+        rclone_backup_path="$rclone_onedrive_config:/直播录制/括弧笑/"
+      else
+        rclone_backup_path="$rclone_onedrive_config:/直播录制/${streamer_name}/"
+      fi
+
+      if rclone move "$backup_dir" "${rclone_backup_path}${formatted_start_time_3}/bilibili/$recording_platform/"; then
+        if [ -z "$(ls -A "$backup_dir")" ]; then
+          log info "rclone 网盘备份成功，删除本地文件夹"
+          rmdir "$backup_dir"
+        fi
+      else
+        upload_success=false
+        log warn "rclone 网盘备份失败，请检查"
+      fi
     fi
   fi
 
   # 发送上传结果消息
-  message=$(handle_upload_status "$upload_success" "$streamer_name" "$start_time")
-  
+  message=$(handle_upload_status "$upload_success" "$streamer_name" "$start_time" "$rclone_onedrive_config" "$rclone_onedrive_free_gb")
   # 推送消息命令
   curl -s -X POST "https://msgpusher.xct258.top/push/root" \
     --data-urlencode "title=直播录制" \
