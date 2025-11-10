@@ -23,7 +23,6 @@ generate_upload_desc() {
   echo "直播间标题：$stream_title
 录制时间：$formatted_start_time_2
 录制平台：$recording_platform
-偶尔通知的直播通知Q群：971923797
 
 括弧笑频道主页：
 bilibili
