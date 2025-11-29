@@ -158,7 +158,7 @@ def create_video(output_file, fps=1, resolution=(1920, 1080), folder_name='frame
 def overlay_videos(original_video, overlay_video, output_file, ass_file):
     # 尝试使用 QSV 加速压制
     qsv_command = [
-        'ffmpeg', '-hwaccel', 'qsv',
+        'ffmpeg',
         '-i', original_video,
         '-i', overlay_video,
         '-filter_complex',
