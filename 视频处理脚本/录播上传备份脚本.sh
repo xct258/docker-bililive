@@ -380,6 +380,8 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
                 fi
               else
                 log warn "弹幕文件内容为空或不符合预期，跳过弹幕压制：${backup_dir}/${xml_file}"
+                # 添加视频到数组
+                compressed_files+=("${backup_dir}/${filename}")
               fi
             else
               log warn "未检测到弹幕 XML 文件，跳过弹幕压制：${backup_dir}/${xml_file}"
