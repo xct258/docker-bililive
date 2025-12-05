@@ -33,7 +33,9 @@ fi
 ### === 输入片段 === ###
 read -p "请输入片段（格式: 00:09:36-00:09:58；1:16:16-1:17:54 或 9:36-9:50）: " segments
 
-segments=$(echo "$segments" | sed 's/;/；/g')
+# 将所有分隔符统一为中文分号
+segments=$(echo "$segments" | sed 's/[;,，]/；/g')
+# 按统一分隔符拆分片段
 IFS='；' read -ra seg_array <<< "$segments"
 
 
