@@ -27,25 +27,80 @@ if [[ ! -f "$input_video" ]]; then
 fi
 
 ### === 输入片段 === ###
-read -p "请输入片段（格式: 00:00:30-00:01:30；00:02:00-00:02:30 或 5:00-6:00）: " segments
-segments=$(echo "$segments" | sed 's/;/；/g')
+### === 输入片段 === ###
+echo "请输入片段（支持以下格式："
+echo "  - 单个片段：00:30-01:20"
+echo "  - 分钟格式：5:00-6:00"
+echo "  - 不带小时：35:01-35:07"
+echo "  - 带小时：03:01:11-03:02:52"
+echo "  - 多个片段请使用 ; ； 、 分隔"
+echo "    例如：00:00:10-00:00:20；1:00-1:30、12:05-12:15;03:01:00-03:01:30,5:3-5:8"
+echo -n "请输入片段："
+read segments
+
+segments=$(echo "$segments" | sed 's/[;,、]/；/g')
 IFS='；' read -ra seg_array <<< "$segments"
 
 ### === 工具函数 === ###
-normalize_time() {
+fix_time_token() {
     local t="$1"
-    if [[ "$t" =~ ^([0-9]{1,2})$ ]]; then
-        printf "00:00:%02d" "${BASH_REMATCH[1]}"; return
+
+    # 移除空格
+    t="${t//[[:space:]]/}"
+
+    # 如果是纯数字 → 视为秒
+    if [[ "$t" =~ ^[0-9]+$ ]]; then
+        printf "00:00:%02d" "$t"
+        return
     fi
-    if [[ "$t" =~ ^([0-9]{1,2}):([0-9]{2})$ ]]; then
-        printf "00:%02d:%02d" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"; return
+
+    # 分:秒（M:SS 或 M:S）
+    if [[ "$t" =~ ^([0-9]{1,2}):([0-9]{1,2})$ ]]; then
+        local m="${BASH_REMATCH[1]}"
+        local s="${BASH_REMATCH[2]}"
+        printf "00:%02d:%02d" "$m" "$s"
+        return
     fi
-    if [[ "$t" =~ ^([0-9]{1,2}):([0-9]{2}):([0-9]{2})$ ]]; then
-        printf "%02d:%02d:%02d" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}"; return
+
+    # 时:分:秒（H:MM:SS 或 H:M:S）
+    if [[ "$t" =~ ^([0-9]{1,2}):([0-9]{1,2}):([0-9]{1,2})$ ]]; then
+        local h="${BASH_REMATCH[1]}"
+        local m="${BASH_REMATCH[2]}"
+        local s="${BASH_REMATCH[3]}"
+        printf "%02d:%02d:%02d" "$h" "$m" "$s"
+        return
     fi
-    echo "❌ 无效时间格式: $t"
+
+    echo "❌ 无法解析的时间格式：$t"
     exit 1
 }
+
+normalize_time() {
+    local t="$1"
+
+    # 分解并归一化各部分
+    if [[ "$t" =~ ^([0-9]+):([0-9]+):([0-9]+)$ ]]; then
+        h="${BASH_REMATCH[1]}"
+        m="${BASH_REMATCH[2]}"
+        s="${BASH_REMATCH[3]}"
+    elif [[ "$t" =~ ^([0-9]+):([0-9]+)$ ]]; then
+        h=0
+        m="${BASH_REMATCH[1]}"
+        s="${BASH_REMATCH[2]}"
+    else
+        h=0; m=0; s="$t"
+    fi
+
+    # 进位修正（例如 5:70 → 6:10）
+    (( m += s / 60 ))
+    (( s = s % 60 ))
+    (( h += m / 60 ))
+    (( m = m % 60 ))
+
+    printf "%02d:%02d:%02d" "$h" "$m" "$s"
+}
+
+
 
 to_seconds() {
     IFS=: read -r h m s <<< "$1"
@@ -65,7 +120,9 @@ declare -a ranges
 for seg in "${seg_array[@]}"; do
     start=${seg%-*}
     end=${seg#*-}
+    start=$(fix_time_token "$start")
     start=$(normalize_time "$start")
+    end=$(fix_time_token "$end")
     end=$(normalize_time "$end")
     start_sec=$(to_seconds "$start")
     end_sec=$(to_seconds "$end")
