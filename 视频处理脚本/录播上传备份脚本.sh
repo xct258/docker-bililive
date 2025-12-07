@@ -21,8 +21,10 @@ generate_upload_desc() {
   local formatted_start_time_2="$2"
 
   echo "直播间标题：$stream_title
-录制时间：$formatted_start_time_2
 录制平台：$recording_platform
+
+原始录制文件（超过一个月的视频文件不定期删除）：
+https://yourls.xct258.top/zbhf-khx
 
 括弧笑频道主页：
 bilibili
@@ -37,7 +39,7 @@ https://www.acfun.cn/u/12909228
 https://www.acfun.cn/u/73177808
 youtube
 蘑菇的刮弧笑
-https://youtube.com/@user-bb8vd2yv7p?si=a9ihQFywCNcQxLaD
+https://www.youtube.com/@蘑菇的刮弧笑
 
 括弧笑直播间地址：
 bilibili
@@ -331,9 +333,6 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
               if grep -aEq '^\s*<(d|sc|gift|guard)' "${backup_dir}/${xml_file}"; then
                 log info "检测到有效弹幕文件，开始弹幕压制：${backup_dir}"
 
-                #biliup_cover_image=$(python3 /rec/脚本/封面获取.py "$backup_dir")
-                #log debug "获取封面图片路径：$biliup_cover_image"
-
                 # 检查 Intel 显卡驱动安装
                 if lspci | grep -i "VGA\|Display" | grep -i "Intel Corporation" > /dev/null; then
                   if ! vainfo > /dev/null 2>&1; then
@@ -417,7 +416,10 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     else
       log info "开始上传视频：${compressed_files[@]}"
       # 正常发布
-      # 执行投稿
+      # 封面获取
+      biliup_cover_image=$(python3 /rec/脚本/封面获取.py "$backup_dir")
+      log debug "获取封面图片路径：$biliup_cover_image"
+
       biliup_upload_output=$("$source_backup/apps/biliup-rs" -u "${biliuprs_up_cookies}" upload \
         --copyright 2 \
         --cover "$biliup_cover_image" \

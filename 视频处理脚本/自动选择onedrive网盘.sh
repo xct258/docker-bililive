@@ -1,9 +1,10 @@
 #!/bin/bash
 
-max_remote=""
-max_free_bytes=0
+# 默认值，如果没有符合条件的网盘
+output='{"remote": null, "free_gb": 0}'
 
-for remote in $(rclone listremotes | sed 's/:$//' | grep -i 'onedrive-video-' | sort); do
+# 按原始顺序遍历远程网盘
+for remote in $(rclone listremotes | sed 's/:$//' | grep -i 'onedrive-video-'); do
     free=$(rclone about "$remote": --json 2>/dev/null | jq -r '.free // 0')
 
     # 过滤剩余容量 <=50GB
@@ -11,18 +12,13 @@ for remote in $(rclone listremotes | sed 's/:$//' | grep -i 'onedrive-video-' | 
         continue
     fi
 
-    # 记录剩余容量最大的网盘
-    if (( free > max_free_bytes )); then
-        max_free_bytes=$free
-        max_remote=$remote
-    fi
+    # 转换为 GB 并保留两位小数
+    free_gb=$(awk "BEGIN {printf \"%.2f\", $free/1024/1024/1024}")
+
+    # 输出 JSON 并退出循环（只返回第一个符合条件的网盘）
+    output=$(jq -n --arg remote "$remote" --arg free_gb "$free_gb" \
+        '{remote: $remote, free_gb: ($free_gb | tonumber)}')
+    break
 done
 
-# 输出 JSON
-if [[ -n "$max_remote" ]]; then
-    max_free_gb=$(awk "BEGIN {printf \"%.2f\", $max_free_bytes/1024/1024/1024}")
-    jq -n --arg remote "$max_remote" --arg free_gb "$max_free_gb" \
-        '{remote: $remote, free_gb: ($free_gb | tonumber)}'
-else
-    jq -n '{remote: null, free_gb: 0}'
-fi
+echo "$output"

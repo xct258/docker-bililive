@@ -7,7 +7,6 @@ if ! command -v ffmpeg &> /dev/null; then
 fi
 echo "ffmpeg 已安装，继续执行"
 
-
 ### === 选择操作模式 === ###
 echo "请选择操作类型:"
 echo "1. 删除输入的片段（保留其它部分）"
@@ -20,44 +19,30 @@ if [[ "$operation" != "1" && "$operation" != "2" && "$operation" != "3" ]]; then
     exit 1
 fi
 
-
 ### === 输入文件 === ###
 read -p "请输入视频文件路径: " input_video
-
 if [[ ! -f "$input_video" ]]; then
     echo "❌ 视频文件不存在"
     exit 1
 fi
 
-
 ### === 输入片段 === ###
-read -p "请输入片段（格式: 00:09:36-00:09:58；1:16:16-1:17:54 或 9:36-9:50）: " segments
-
-# 将所有分隔符统一为中文分号
-segments=$(echo "$segments" | sed 's/[;,，]/；/g')
-# 按统一分隔符拆分片段
+read -p "请输入片段（格式: 00:00:30-00:01:30；00:02:00-00:02:30 或 5:00-6:00）: " segments
+segments=$(echo "$segments" | sed 's/;/；/g')
 IFS='；' read -ra seg_array <<< "$segments"
-
 
 ### === 工具函数 === ###
 normalize_time() {
     local t="$1"
-
-    # SS
     if [[ "$t" =~ ^([0-9]{1,2})$ ]]; then
         printf "00:00:%02d" "${BASH_REMATCH[1]}"; return
     fi
-
-    # MM:SS
     if [[ "$t" =~ ^([0-9]{1,2}):([0-9]{2})$ ]]; then
         printf "00:%02d:%02d" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"; return
     fi
-
-    # HH:MM:SS
     if [[ "$t" =~ ^([0-9]{1,2}):([0-9]{2}):([0-9]{2})$ ]]; then
         printf "%02d:%02d:%02d" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}"; return
     fi
-
     echo "❌ 无效时间格式: $t"
     exit 1
 }
@@ -71,26 +56,31 @@ sec_to_hms() {
     printf "%02d:%02d:%02d" "$(($1/3600))" "$((($1%3600)/60))" "$(($1%60))"
 }
 
-
 ### === 获取视频总时长 === ###
 video_duration_sec=$(ffprobe -v error -show_entries format=duration \
     -of default=noprint_wrappers=1:nokey=1 "$input_video" | awk '{print int($1)}')
 
-video_duration=$(sec_to_hms "$video_duration_sec")
-
-
 ### === 解析片段并排序 === ###
 declare -a ranges
-
 for seg in "${seg_array[@]}"; do
     start=${seg%-*}
     end=${seg#*-}
-
     start=$(normalize_time "$start")
     end=$(normalize_time "$end")
-
     start_sec=$(to_seconds "$start")
     end_sec=$(to_seconds "$end")
+
+    # 自动扩展 3 秒
+    start_sec=$((start_sec - 5))
+    end_sec=$((end_sec + 5))
+
+    # 边界检查
+    if (( start_sec < 0 )); then
+        start_sec=0
+    fi
+    if (( end_sec > video_duration_sec )); then
+        end_sec=$video_duration_sec
+    fi
 
     if (( start_sec >= end_sec )); then
         echo "❌ 片段起始时间必须小于结束时间: $seg"
@@ -98,108 +88,82 @@ for seg in "${seg_array[@]}"; do
     fi
 
     ranges+=("$start_sec-$end_sec")
+
 done
 
 IFS=$'\n' sorted_ranges=($(sort -n <<< "${ranges[*]}"))
 unset IFS
 
+### === 生成保留/删除片段时间列表 === ###
+prev_end=0
+keep_times=()
+remove_times=()
 
-### === 准备临时文件 === ###
-concat_keep="./concat_keep.txt"
-concat_removed="./concat_removed.txt"
-
-> "$concat_keep"
-> "$concat_removed"
-
-index_keep=0
-index_removed=0
-prev_end_sec=0
-
-
-### === 主处理逻辑 === ###
 for seg in "${sorted_ranges[@]}"; do
     start_sec=${seg%-*}
     end_sec=${seg#*-}
 
-    ### 模式 1 & 3：保留未删除部分 ###
     if [[ "$operation" == "1" || "$operation" == "3" ]]; then
-        if (( prev_end_sec < start_sec )); then
-            part_file="./keep_${index_keep}.mp4"
-            echo "file '$part_file'" >> "$concat_keep"
-
-            ffmpeg -ss "$(sec_to_hms "$prev_end_sec")" \
-                   -to "$(sec_to_hms "$start_sec")" \
-                   -i "$input_video" \
-                   -c copy -y "$part_file"
-
-            ((index_keep++))
+        if (( prev_end < start_sec )); then
+            keep_times+=("$prev_end-$start_sec")
         fi
     fi
 
-    ### 模式 2：裁切片段 ###
     if [[ "$operation" == "2" ]]; then
-        part_file="./keep_${index_keep}.mp4"
-        echo "file '$part_file'" >> "$concat_keep"
-
-        ffmpeg -ss "$(sec_to_hms "$start_sec")" \
-               -to "$(sec_to_hms "$end_sec")" \
-               -i "$input_video" \
-               -c copy -y "$part_file"
-
-        ((index_keep++))
+        keep_times+=("$start_sec-$end_sec")
     fi
 
-    ### 模式 3：将删除的片段单独保存 ###
     if [[ "$operation" == "3" ]]; then
-        part_file="./removed_${index_removed}.mp4"
-        echo "file '$part_file'" >> "$concat_removed"
-
-        ffmpeg -ss "$(sec_to_hms "$start_sec")" \
-               -to "$(sec_to_hms "$end_sec")" \
-               -i "$input_video" \
-               -c copy -y "$part_file"
-
-        ((index_removed++))
+        remove_times+=("$start_sec-$end_sec")
     fi
 
-    prev_end_sec=$end_sec
+    prev_end=$end_sec
 done
 
-
-### === 最后一段（用于模式 1 & 3） === ###
+# 最后一段（模式 1 & 3）
 if [[ "$operation" == "1" || "$operation" == "3" ]]; then
-    if (( prev_end_sec < video_duration_sec )); then
-        part_file="./keep_${index_keep}.mp4"
-        echo "file '$part_file'" >> "$concat_keep"
-
-        ffmpeg -ss "$(sec_to_hms "$prev_end_sec")" \
-               -to "$video_duration" \
-               -i "$input_video" \
-               -c copy -y "$part_file"
+    if (( prev_end < video_duration_sec )); then
+        keep_times+=("$prev_end-$video_duration_sec")
     fi
 fi
 
+### === 零重编码切割函数 === ###
+split_and_concat() {
+    local times=("$@")
+    local prefix=$1
+    local output_file=$2
+    shift 2
 
-### === 生成最终文件 === ###
+    concat_file="${prefix}_concat.txt"
+    > "$concat_file"
+    idx=0
+
+    for t in "$@"; do
+        s=${t%-*}
+        e=${t#*-}
+        part_file="./${prefix}_${idx}.ts"
+        ffmpeg -ss "$s" -to "$e" -i "$input_video" -c copy -avoid_negative_ts make_zero -y "$part_file"
+        echo "file '$part_file'" >> "$concat_file"
+        ((idx++))
+    done
+
+    ffmpeg -f concat -safe 0 -i "$concat_file" -c copy -y "$output_file"
+    rm -f ./${prefix}_*.ts "$concat_file"
+}
+
+### === 执行零重编码处理 === ###
 base="${input_video%.*}"
-
 output_keep="${base}-edited.mp4"
 output_removed="${base}-deleted.mp4"
 
-# 合并保留部分
-ffmpeg -f concat -safe 0 -i "$concat_keep" -c copy -y "$output_keep"
-
-# 合并删除部分（用于模式 3）
-if [[ "$operation" == "3" ]]; then
-    ffmpeg -f concat -safe 0 -i "$concat_removed" -c copy -y "$output_removed"
+if [[ ${#keep_times[@]} -gt 0 ]]; then
+    split_and_concat keep "$output_keep" "${keep_times[@]}"
 fi
 
+if [[ "$operation" == "3" && ${#remove_times[@]} -gt 0 ]]; then
+    split_and_concat removed "$output_removed" "${remove_times[@]}"
+fi
 
-### === 清理 === ###
-rm -f keep_*.mp4 removed_*.mp4 "$concat_keep" "$concat_removed"
-
-
-### === 完成提示 === ###
 echo "🎉 已完成!"
 echo "保留部分视频: $output_keep"
 if [[ "$operation" == "3" ]]; then
