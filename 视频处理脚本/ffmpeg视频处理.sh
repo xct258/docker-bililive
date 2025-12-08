@@ -216,7 +216,7 @@ if [[ ${#keep_times[@]} -gt 0 ]]; then
     split_and_concat keep "$output_keep" "${keep_times[@]}"
 fi
 
-if [[ "$operation" == "3" && ${#remove_times[@]} -gt 0 ]]; then
+if [[ "$operation" == "3" ]] && [[ ${#remove_times[@]} -gt 0 ]]; then
     split_and_concat removed "$output_removed" "${remove_times[@]}"
 fi
 
