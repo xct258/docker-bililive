@@ -265,47 +265,6 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
         log success "xz-utils 安装成功"
       fi
     fi
-
-    # 上传到B站
-    if [[ ! -f "$source_backup/apps/biliup-rs" ]]; then
-      log info "检测到未下载 biliup-rs，开始下载..."
-      latest_release_biliup_rs=$(curl -s https://api.github.com/repos/biliup/biliup-rs/releases/latest)
-      latest_biliup_rs_x64_url=$(echo "$latest_release_biliup_rs" | jq -r ".assets[] | select(.name | test(\"x86_64-linux.tar.xz\")) | .browser_download_url")
-      latest_biliup_rs_arm64_url=$(echo "$latest_release_biliup_rs" | jq -r ".assets[] | select(.name | test(\"aarch64-linux.tar.xz\")) | .browser_download_url")
-
-      arch=$(uname -m | grep -i -E "x86_64|aarch64")
-      if [[ $arch == *"x86_64"* ]]; then
-        if wget -O $source_backup/apps/biliup-rs.tar.xz "$latest_biliup_rs_x64_url"; then
-          log success "biliup-rs x86_64 版本下载成功"
-        else
-          log error "biliup-rs x86_64 版本下载失败"
-          upload_success=false
-        fi
-      elif [[ $arch == *"aarch64"* ]]; then
-        if wget -O $source_backup/apps/biliup-rs.tar.xz "$latest_biliup_rs_arm64_url"; then
-          log success "biliup-rs aarch64 版本下载成功"
-        else
-          log error "biliup-rs aarch64 版本下载失败"
-          upload_success=false
-        fi
-      else
-        log error "未知架构，无法下载 biliup-rs"
-        upload_success=false
-      fi
-
-      mkdir $source_backup/apps/biliup-rs-tmp
-      if tar -xf $source_backup/apps/biliup-rs.tar.xz -C $source_backup/biliup-rs-tmp; then
-        log success "biliup-rs 解压成功"
-      else
-        log error "biliup-rs 解压失败"
-        upload_success=false
-      fi
-      rm -rf $source_backup/apps/biliup-rs.tar.xz
-      biliup_file=$(find $source_backup/apps/biliup-rs-tmp -type f -name "biliup")
-      mv $biliup_file $source_backup/apps/biliup-rs
-      rm -rf $source_backup/apps/biliup-rs-tmp
-      chmod +x $source_backup/apps/biliup-rs
-    fi
   fi
 
   for video_file in "${input_files[@]}"; do
@@ -420,7 +379,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
       biliup_cover_image=$(python3 /rec/脚本/封面获取.py "$backup_dir")
       log debug "获取封面图片路径：$biliup_cover_image"
 
-      biliup_upload_output=$("$source_backup/apps/biliup-rs" -u "${biliuprs_up_cookies}" upload \
+      biliup_upload_output=$(biliup -u "${biliuprs_up_cookies}" upload \
         --copyright 2 \
         --cover "$biliup_cover_image" \
         --source https://live.bilibili.com/1962720 \

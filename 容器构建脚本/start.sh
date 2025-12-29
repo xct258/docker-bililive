@@ -96,11 +96,6 @@ else
     Bililive_PASS=$(openssl rand -base64 12)
   fi
   echo Bililive_PASS="$Bililive_PASS" >> /root/.credentials
-
-  if [ -z "$Biliup_PASS" ]; then
-    Biliup_PASS=$(openssl rand -base64 12)
-  fi
-  echo Biliup_PASS="$Biliup_PASS" >> /root/.credentials
 fi
 
 # 启动 BililiveRecorder
@@ -125,7 +120,7 @@ cd /rec/biliup
 
 [ -f ./watch_process.pid ] && rm -rf ./watch_process.pid
 
-biliup --password "$Biliup_PASS" start > /dev/null 2>&1
+biliup server --auth > /dev/null 2>&1
 if [ $? -ne 0 ]; then
   echo "$(date)"
   echo "biliup启动失败"
@@ -196,8 +191,7 @@ echo "$Bililive_PASS"
 echo "------------------------------------"
 echo "biliup默认用户名为："
 echo "biliup"
-echo "当前biliup密码:"
-echo "$Biliup_PASS"
+echo "biliup密码需要登录web界面设置"
 echo "------------------------------------"
 
 # 保持容器运行

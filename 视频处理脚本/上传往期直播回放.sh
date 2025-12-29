@@ -101,7 +101,7 @@ for dirname in "${subdirs[@]}"; do
     if [[ ${#video_files[@]} -gt 0 ]]; then
         log info "开始上传视频文件..."
         upload_output=$(
-            "$WORK_DIR/biliup-rs" -u "$WORK_DIR/cookies-烦心事远离.json" upload \
+            biliup -u "$WORK_DIR/cookies-烦心事远离.json" upload \
                 --copyright 2 \
                 --cover "$biliup_cover_image" \
                 --source https://live.bilibili.com/1962720 \
