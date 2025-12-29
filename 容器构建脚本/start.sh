@@ -121,12 +121,9 @@ else
 fi
 
 # 启动 biliup
-cd /rec/biliup
-
-[ -f ./watch_process.pid ] && rm -rf ./watch_process.pid
-
 /rec/biliup/biliup server --auth > /dev/null 2>&1
-if [ $? -ne 0 ]; then
+
+if ! pgrep -f "biliup" > /dev/null; then
   echo "$(date)"
   echo "biliup启动失败"
 else
