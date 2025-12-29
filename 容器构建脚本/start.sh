@@ -193,7 +193,7 @@ echo "$Bililive_PASS"
 echo "------------------------------------"
 echo "biliup默认用户名为："
 echo "biliup"
-echo "biliup密码需要登录web界面设置"
+echo "biliup密码需要登录web界面注册"
 echo "------------------------------------"
 
 # 保持容器运行
