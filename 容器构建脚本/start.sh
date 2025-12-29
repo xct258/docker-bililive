@@ -10,6 +10,11 @@ if [ ! -f /rec/上传备份脚本配置文件.conf ]; then
     cp /opt/bililive/config/上传备份脚本配置文件.conf /rec/
 fi
 
+# biliup安装
+if [ ! -f /rec/biliup/biliup ]; then
+    cp /root/biliup/biliup /rec/biliup/
+fi
+
 # 复制 /opt/bililive/biliup 到 /rec/biliup/脚本
 for file in /opt/bililive/biliup/*; do
     filename=$(basename "$file")
@@ -120,7 +125,7 @@ cd /rec/biliup
 
 [ -f ./watch_process.pid ] && rm -rf ./watch_process.pid
 
-biliup server --auth > /dev/null 2>&1
+/rec/biliup/biliup server --auth > /dev/null 2>&1
 if [ $? -ne 0 ]; then
   echo "$(date)"
   echo "biliup启动失败"

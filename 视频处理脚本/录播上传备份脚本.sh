@@ -361,13 +361,6 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
     upload_title_1="${formatted_start_time_4}"
     # 构建视频简介
     upload_desc_1=$(generate_upload_desc "$stream_title" "$formatted_start_time_2")
-
-    # 延时发布
-    # 获取当前时间的时间戳
-    #current_time_biliup_rs=$(date +%s)
-    # 计算6小时后的时间戳
-    #delay_time_biliup_rs=$((current_time_biliup_rs + 6 * 3600))
-    #$source_backup/biliup-rs -u $source_backup/cookies.json upload --copyright 2 --source https://live.bilibili.com/1962720 --tid 17 --title "$upload_title_1" --desc "$upload_desc_1" --tag "搞笑,直播回放,奶茶猪,高机动持盾军官,括弧笑,娱乐主播" --dtime ${delay_time_biliup_rs} "${compressed_files[@]}"
     
     if [[ "$ENABLE_VIDEO_UPLOAD" != "true" ]]; then
       log warn "上传已被禁用，跳过投稿步骤"
@@ -379,7 +372,7 @@ for backup_dir in "${sorted_backup_dirs[@]}"; do
       biliup_cover_image=$(python3 /rec/脚本/封面获取.py "$backup_dir")
       log debug "获取封面图片路径：$biliup_cover_image"
 
-      biliup_upload_output=$(biliup -u "${biliuprs_up_cookies}" upload \
+      biliup_upload_output=$("$source_backup/biliup/biliup" -u "${biliup_up_cookies}" upload \
         --copyright 2 \
         --cover "$biliup_cover_image" \
         --source https://live.bilibili.com/1962720 \

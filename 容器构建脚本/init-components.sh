@@ -8,14 +8,21 @@ latest_release_7z=$(curl -s https://api.github.com/repos/ip7z/7zip/releases/late
 latest_7z_x64_url=$(echo "$latest_release_7z" | jq -r '.assets[] | select(.name | test("linux-x64.tar.xz")) | .browser_download_url')
 latest_7z_arm64_url=$(echo "$latest_release_7z" | jq -r '.assets[] | select(.name | test("linux-arm64.tar.xz")) | .browser_download_url')
 
+# 获取 biliup 下载链接
+latest_release_biliup=$(curl -s https://api.github.com/repos/biliup/biliup/releases/latest)
+latest_biliup_x64_url=$(echo "$latest_release_biliup" | jq -r '.assets[] | select(.name | test("x86_64-linux.tar.xz")) | .browser_download_url')
+latest_biliup_arm64_url=$(echo "$latest_release_biliup" | jq -r '.assets[] | select(.name | test("aarch64-linux.tar.xz")) | .browser_download_url')
+
 # 获取服务器架构
 arch=$(uname -m)
 if [[ $arch == *"x86_64"* ]]; then
     wget -O /root/tmp/7zz.tar.xz "$latest_7z_x64_url"
+    wget -O /root/tmp/biliup.tar.xz "$latest_biliup_x64_url"
     wget -O /root/tmp/BililiveRecorder-CLI.zip https://github.com/BililiveRecorder/BililiveRecorder/releases/latest/download/BililiveRecorder-CLI-linux-x64.zip
     wget -O /root/tmp/DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/main/DanmakuFactory/DanmakuFactory-amd64
 elif [[ $arch == *"aarch64"* ]]; then
     wget -O /root/tmp/7zz.tar.xz "$latest_7z_arm64_url"
+    wget -O /root/tmp/biliup.tar.xz "$latest_biliup_arm64_url"
     wget -O /root/tmp/BililiveRecorder-CLI.zip https://github.com/BililiveRecorder/BililiveRecorder/releases/latest/download/BililiveRecorder-CLI-linux-arm64.zip
     wget -O /root/tmp/DanmakuFactory https://raw.githubusercontent.com/xct258/docker-bililive/main/DanmakuFactory/DanmakuFactory-arm64
 fi
@@ -24,12 +31,12 @@ fi
 apt install -y tar xz-utils
 # 安装7zz
 tar -xf /root/tmp/7zz.tar.xz -C /root/tmp
-tar -xf /root/tmp/biliup-rs.tar.xz -C /root/tmp
+tar -xf /root/tmp/biliup.tar.xz -C /root/tmp
 chmod +x /root/tmp/7zz
 mv /root/tmp/7zz /bin/7zz
 
 # 安装该镜像所需要的软件
-apt install -y ffmpeg pciutils fontconfig procps python3-pip rclone
+apt install -y ffmpeg pciutils fontconfig procps rclone
 
 # 安装该镜像所需要的字体
 # 创建字体目录
@@ -41,7 +48,14 @@ wget -O "/root/.fonts/微软雅黑.ttf" https://raw.githubusercontent.com/xct258
 # 更新字体缓存
 fc-cache -f -v
 
+# 安装biliup
+biliup_file=$(find /root/tmp -type f -name "biliup")
+mkdir -p /root/biliup
+mv "$biliup_file" /root/biliup/biliup
+chmod +x /root/biliup/biliup
+
 # 安装DanmakuFactory
+mkdir -p /opt/bililive/apps
 chmod +x /root/tmp/DanmakuFactory 
 mv /root/tmp/DanmakuFactory /opt/bililive/apps/DanmakuFactory
 
@@ -49,9 +63,6 @@ mv /root/tmp/DanmakuFactory /opt/bililive/apps/DanmakuFactory
 mkdir -p /root/BililiveRecorder
 7zz x /root/tmp/BililiveRecorder-CLI.zip -o/root/BililiveRecorder
 chmod +x /root/BililiveRecorder/BililiveRecorder.Cli
-
-# 安装biliup
-pip3 install biliup --break-system-packages
 
 # 下载容器所需脚本
 # 创建相关目录
