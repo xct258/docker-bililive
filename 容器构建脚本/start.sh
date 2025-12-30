@@ -120,18 +120,18 @@ else
   echo "------------------------------------"
 fi
 
-# 启动 biliup
-/rec/biliup/biliup server --auth > /dev/null 2>&1
+# 启动 biliup(暂时不使用biliup录制，只用于上传)
+#/rec/biliup/biliup server --auth > /dev/null 2>&1
 
-if ! pgrep -f "biliup" > /dev/null; then
-  echo "$(date)"
-  echo "biliup启动失败"
-else
-  echo "------------------------------------"
-  echo "$(date)"
-  echo "biliup运行中"
-  echo "------------------------------------"
-fi
+#if ! pgrep -f "biliup" > /dev/null; then
+#  echo "$(date)"
+#  echo "biliup启动失败"
+#else
+#  echo "------------------------------------"
+#  echo "$(date)"
+#  echo "biliup运行中"
+#  echo "------------------------------------"
+#fi
 
 # 创建并启动每日视频上传备份定时任务
 SCHEDULER_SCRIPT="/usr/local/bin/执行视频备份脚本.sh"
@@ -191,10 +191,10 @@ echo "$Bililive_USER"
 echo "当前录播姬密码:"
 echo "$Bililive_PASS"
 echo "------------------------------------"
-echo "biliup默认用户名为："
-echo "biliup"
-echo "biliup密码需要登录web界面注册"
-echo "------------------------------------"
+#echo "biliup默认用户名为："
+#echo "biliup"
+#echo "biliup密码需要登录web界面注册"
+#echo "------------------------------------"
 
 # 保持容器运行
 tail -f /dev/null
