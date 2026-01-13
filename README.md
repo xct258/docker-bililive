@@ -9,7 +9,6 @@ docker run -d   \
     -e XCT258_GITHUB_TOKEN=  `# github的token，用于下载配置文件`  \
     -e Bililive_USER=xct258  `# 录播姬默认用户名xct258`  \
     -e Bililive_PASS=xct258  `# 录播姬默认随机密码`  \
-    -e Biliup_PASS=xct258  `# biliup默认用户名为biliup不可指定，biliup默认随机密码`  \
     -v /home/xct258/bililive:/rec  \
     xct258/debian-bililive
 ```
