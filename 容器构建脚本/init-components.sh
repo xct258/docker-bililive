@@ -76,5 +76,7 @@ wget -O /opt/bililive/scripts/ffmpeg视频处理.sh https://raw.githubuserconten
 wget -O /opt/bililive/biliup/biliup后处理.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/biliup/biliup后处理.sh
 wget -O /opt/bililive/scripts/log.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/log.sh
 wget -O /opt/bililive/scripts/自动选择onedrive网盘.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/自动选择onedrive网盘.sh
+wget -O /opt/bililive/scripts/弹幕偏移脚本.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/弹幕偏移脚本.sh
+wget -O /opt/bililive/scripts/xml转ass.sh https://raw.githubusercontent.com/xct258/docker-bililive/main/视频处理脚本/xml转ass.sh
 chmod +x /opt/bililive/scripts/*.sh
 chmod +x /opt/bililive/biliup/*.sh
