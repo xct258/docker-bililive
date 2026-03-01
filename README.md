@@ -1,16 +1,9 @@
+<div align="center">
+  <h1>⚠️ 项目迁移通知 ⚠️</h1>
+  <p>该项目已移动到新地址，当前仓库将停止更新。</p>
+  <a href="https://github.com/xct258/khx-live">
+    <img src="https://img.shields.io/badge/新仓库-点击访问-blue?style=for-the-badge&logo=github" alt="New Repo">
+  </a>
+</div>
 
-主要用于自动录制上传括弧笑的直播
-
-启动示例：
-```
-docker run -d   \
-    --name debian-bililive   \
-    --net=host   \
-    -e XCT258_GITHUB_TOKEN=  `# github的token，用于下载配置文件`  \
-    -e Bililive_USER=xct258  `# 录播姬默认用户名xct258`  \
-    -e Bililive_PASS=xct258  `# 录播姬默认随机密码`  \
-    -v /home/xct258/bililive:/rec  \
-    xct258/debian-bililive
-```
-biliup默认端口19159
-录播姬默认端口2356
+---
